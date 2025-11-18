@@ -1,5 +1,5 @@
 import { Icon } from '@/components/ui/icon';
-import { cn } from '@/lib/utils';
+import { THEME } from '@/lib/theme';
 import {
   IconBell,
   IconBellFilled,
@@ -20,14 +20,19 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerTransparent: true,
+        tabBarActiveTintColor: THEME.light.foreground,
+        tabBarInactiveTintColor: THEME.light.mutedForeground,
+        tabBarStyle: {
+          borderTopWidth: 0,
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Khám phá',
           headerShown: false,
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} as={IconHome} asFilled={IconHomeFilled} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon color={color} focused={focused} as={IconHome} asFilled={IconHomeFilled} />
           ),
         }}
       />
@@ -35,8 +40,13 @@ export default function TabsLayout() {
         name="bookings"
         options={{
           title: 'Đơn thuê',
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} as={IconFileInvoice} asFilled={IconFileInvoiceFilled} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              color={color}
+              focused={focused}
+              as={IconFileInvoice}
+              asFilled={IconFileInvoiceFilled}
+            />
           ),
         }}
       />
@@ -44,8 +54,13 @@ export default function TabsLayout() {
         name="controls"
         options={{
           title: 'Điều khiển',
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} as={IconDeviceRemote} asFilled={IconDeviceRemoteFilled} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              color={color}
+              focused={focused}
+              as={IconDeviceRemote}
+              asFilled={IconDeviceRemoteFilled}
+            />
           ),
         }}
       />
@@ -53,8 +68,8 @@ export default function TabsLayout() {
         name="notifications"
         options={{
           title: 'Thông báo',
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} as={IconBell} asFilled={IconBellFilled} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon color={color} focused={focused} as={IconBell} asFilled={IconBellFilled} />
           ),
         }}
       />
@@ -62,8 +77,13 @@ export default function TabsLayout() {
         name="support"
         options={{
           title: 'Hỗ trợ',
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon focused={focused} as={IconHelpCircle} asFilled={IconHelpCircleFilled} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon
+              color={color}
+              focused={focused}
+              as={IconHelpCircle}
+              asFilled={IconHelpCircleFilled}
+            />
           ),
         }}
       />
@@ -73,17 +93,20 @@ export default function TabsLayout() {
 
 const TabBarIcon = ({
   focused,
+  color,
   as: IconComponent,
   asFilled: IconFilledComponent,
 }: {
+  color: string;
   focused: boolean;
   as: LucideIcon;
   asFilled?: LucideIcon;
 }) => {
   return (
     <Icon
+      color={color}
       as={focused && IconFilledComponent ? IconFilledComponent : IconComponent}
-      className={cn('size-5', focused ? 'text-primary' : 'text-muted-foreground')}
+      className="size-6"
     />
   );
 };

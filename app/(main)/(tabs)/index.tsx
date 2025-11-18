@@ -1,46 +1,53 @@
-import { Brand, BrandsList } from '@/components/brands-list';
+import { BrandsList } from '@/components/brands-list';
+import { ChatCard } from '@/components/chat-card';
 import { PopularBikesList } from '@/components/popular-bikes-list';
-import { PromotionLoginCard } from '@/components/promotion-login-card';
-import { Province, ProvincesList } from '@/components/provinces-list';
+import { ProvincesList } from '@/components/provinces-list';
 import { SearchCard } from '@/components/search-card';
 import { ParallaxScrollView } from '@/components/ui/parallax-scrollview';
 import { Text } from '@/components/ui/text';
-import { Bike } from '@/store/bikeStore';
-import { Image } from 'expo-image';
+import { ImageBackground } from 'expo-image';
 import { View } from 'react-native';
 
 export default function HomeScreen() {
-  const handleBrandSelect = (brand: Brand) => {};
-
-  const handleProvinceSelect = (province: Province) => {};
-
-  const handleBikeSelect = (bike: Bike) => {};
-
   return (
     <ParallaxScrollView
-      headerHeight={300}
+      headerHeight={350}
       headerImage={
-        <Image
-          source={{
-            uri: 'https://www.bikebound.com/wp-content/uploads/2022/12/Honda-NX650-Dominator-Baja-1.jpg',
-          }}
+        <ImageBackground
+          source={require('@/assets/images/header.png')}
           style={{ width: '100%', height: '100%' }}
-          contentFit="cover"
-        />
+          contentPosition="bottom center">
+          <View className="dark flex-1 justify-end gap-2 bg-black/70 p-8 py-12">
+            <Text>Chào mừng trở lại</Text>
+            <Text className="text-4xl font-extrabold">MOTOHERE</Text>
+          </View>
+        </ImageBackground>
       }>
-      <View className="gap-8 bg-background px-4 pb-8">
+      <View className="mt-16 gap-8 bg-background px-4">
         <SearchCard />
-        <PromotionLoginCard />
-        <BrandsList onBrandSelect={handleBrandSelect} />
-      </View>
-      <View className="gap-8 rounded-t-[32px] bg-primary px-4 pt-14">
+        <ChatCard />
         <View className="gap-4">
-          <Text className="font-semibold text-primary-foreground">Phổ biến nhất</Text>
-          <PopularBikesList onBikeSelect={handleBikeSelect} />
+          <View className="gap-1">
+            <Text className="text-xl font-semibold">Các hãng xe</Text>
+            <Text className="text-sm text-muted-foreground">Các hãng nổi tiếng ở Việt Nam</Text>
+          </View>
+          <BrandsList />
         </View>
         <View className="gap-4">
-          <Text className="font-semibold text-primary-foreground">Địa điểm</Text>
-          <ProvincesList onProvinceSelect={handleProvinceSelect} />
+          <View className="gap-1">
+            <Text className="text-xl font-semibold">Phổ biến nhất</Text>
+            <Text className="text-sm text-muted-foreground">Những xe tốt giành cho bạn</Text>
+          </View>
+          <PopularBikesList />
+        </View>
+        <View className="gap-4">
+          <View className="gap-1">
+            <Text className="text-xl font-semibold">Địa điểm thuê xe</Text>
+            <Text className="text-sm text-muted-foreground">
+              Vị trí có lượng thuê xe nhiều nhất
+            </Text>
+          </View>
+          <ProvincesList />
         </View>
       </View>
     </ParallaxScrollView>
