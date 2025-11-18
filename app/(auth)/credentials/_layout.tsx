@@ -1,7 +1,6 @@
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { THEME } from '@/lib/theme';
-import { IconX } from '@tabler/icons-react-native';
+import { IconChevronLeft, IconX } from '@tabler/icons-react-native';
 import { Link, Stack } from 'expo-router';
 import { Pressable } from 'react-native';
 
@@ -11,7 +10,6 @@ export default function CredentialsLayout() {
       screenOptions={{
         gestureEnabled: false,
         headerTransparent: true,
-        headerTintColor: THEME.dark.foreground,
       }}>
       <Stack.Screen
         name="sign-in"
@@ -24,7 +22,7 @@ export default function CredentialsLayout() {
       <Stack.Screen
         name="sign-up"
         options={{
-          headerBackTitle: 'Quay lại',
+          headerLeft: () => <BackButton />,
           title: '',
         }}
       />
@@ -35,7 +33,18 @@ const CloseButton = () => {
   return (
     <Link href=".." asChild>
       <Pressable className="dark justify-center px-2">
-        <Icon as={IconX} className="size-6 text-foreground" />
+        <Icon as={IconX} className="size-5 text-foreground" />
+      </Pressable>
+    </Link>
+  );
+};
+
+const BackButton = () => {
+  return (
+    <Link href=".." asChild>
+      <Pressable className="dark flex-row items-center gap-2 px-2">
+        <Icon as={IconChevronLeft} className="size-5 text-foreground" />
+        <Text>Quay lại</Text>
       </Pressable>
     </Link>
   );

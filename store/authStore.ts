@@ -1,19 +1,11 @@
 import { create } from 'zustand';
+import * as AuthAPI from '../api/auth';
+import { User } from '../api/auth';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL!;
-
-export interface User {
-  id: string | null;
-  accessToken: string | null;
-  refreshToken: string | null;
-}
-
-export interface AuthState {
+interface AuthState {
   user: User | null;
-
   isAuthenticated: boolean;
   isLoading: boolean;
-
   signIn: (username: string, password: string) => Promise<void>;
   signUp: (username: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -21,35 +13,16 @@ export interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-
   isAuthenticated: false,
   isLoading: false,
 
-  signIn: async (username: string, password: string) => {
+  signIn: async (username, password) => {
     set({ isLoading: true });
-
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || result.status !== 200) {
-        set({ isLoading: false });
-        throw new Error(result.message[0]);
-      }
+      const { user } = await AuthAPI.login(username, password);
 
       set({
-        user: {
-          id: result.data.userId,
-          accessToken: result.data.accessToken,
-          refreshToken: result.data.refreshToken,
-        },
+        user,
         isAuthenticated: true,
         isLoading: false,
       });
@@ -59,31 +32,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  signUp: async (username: string, password: string) => {
+  signUp: async (username, password) => {
     set({ isLoading: true });
-
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || result.status !== 200) {
-        set({ isLoading: false });
-        throw new Error(result.message[0]);
-      }
+      const { user } = await AuthAPI.register(username, password);
 
       set({
-        user: {
-          id: result.data.userId,
-          accessToken: result.data.accessToken,
-          refreshToken: result.data.refreshToken,
-        },
+        user,
         isAuthenticated: true,
         isLoading: false,
       });
@@ -95,30 +50,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signOut: async () => {
     set({ isLoading: true });
-
     const { user } = get();
 
-    if (!user?.accessToken) {
+    console.log(user?.refreshToken);
+
+    if (!user?.refreshToken) {
       set({ user: null, isAuthenticated: false, isLoading: false });
       return;
     }
 
     try {
-      const response = await fetch(`${API_URL}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain',
-          'x-token': user.accessToken,
-        },
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || result.status !== 200) {
-        set({ isLoading: false });
-        throw new Error(result.message[0]);
-      }
-
+      await AuthAPI.logout(user.refreshToken);
       set({ user: null, isAuthenticated: false, isLoading: false });
     } catch (error: any) {
       set({ isLoading: false });
