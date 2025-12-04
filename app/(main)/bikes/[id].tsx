@@ -10,7 +10,7 @@ import { useAuthStore } from '@/store/authStore';
 import { IconHeart, IconMapPin, IconPhone } from '@tabler/icons-react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ScrollView, View } from 'react-native';
 import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,6 +28,20 @@ export default function BikeDetailScreen() {
   const bike = data?.bikeDetail;
 
   const bottom = useBottomTabOverflow();
+
+  const handleBookPress = () => {
+    if (!bike) return;
+
+    router.push({
+      pathname: '/(main)/bikes/confirm',
+      params: {
+        carId: id as string,
+        pricePerHour: bike.pricePerHour.toString(),
+        customerId: user?.userId,
+        title: `${bike.brand} ${bike.model}`,
+      },
+    });
+  };
 
   return (
     <SafeAreaView className="relative flex-1 bg-background p-4 pt-20">
@@ -106,7 +120,7 @@ export default function BikeDetailScreen() {
           </Text>
           <Text className="font-semibold text-accent"> / ngày</Text>
         </View>
-        <Button className="flex-1 rounded-full" variant="secondary">
+        <Button className="flex-1 rounded-full" variant="secondary" onPress={handleBookPress}>
           <Text>Đặt xe</Text>
         </Button>
       </View>

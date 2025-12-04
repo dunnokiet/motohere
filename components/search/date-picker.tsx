@@ -174,47 +174,11 @@ export function DatePicker(props: DatePickerProps) {
   }, [value, mode, placeholder, timeFormat]);
 
   // Helper function to check if a time is disabled based on min/max dates
-  const isTimeDisabled = useCallback(
-    (hour: number) => {
-      const checkDate = new Date(currentDate);
-      checkDate.setHours(hour, 0, 0, 0);
-
-      if (minimumDate) {
-        const min = new Date(minimumDate);
-
-        const currentDateOnly = new Date(currentDate);
-        currentDateOnly.setHours(0, 0, 0, 0);
-        const minDateOnly = new Date(minimumDate);
-        minDateOnly.setHours(0, 0, 0, 0);
-
-        if (currentDateOnly.getTime() === minDateOnly.getTime()) {
-          let minHour = min.getHours();
-          if (min.getMinutes() > 0) {
-            minHour += 1;
-          }
-
-          if (hour < minHour) return true;
-        }
-      }
-
-      if (maximumDate) {
-        const max = new Date(maximumDate);
-
-        const currentDateOnly = new Date(currentDate);
-        currentDateOnly.setHours(0, 0, 0, 0);
-        const maxDateOnly = new Date(maximumDate);
-        maxDateOnly.setHours(0, 0, 0, 0);
-
-        if (currentDateOnly.getTime() === maxDateOnly.getTime()) {
-          let maxHour = max.getHours();
-          if (hour > maxHour) return true;
-        }
-      }
-
-      return false;
-    },
-    [currentDate, minimumDate, maximumDate]
-  );
+  const isTimeDisabled = useCallback((hour: number) => {
+    // Không disable giờ theo minimumDate/maximumDate nữa.
+    // Rule về giờ sẽ được xử lý ở màn hình sử dụng (vd: confirm booking).
+    return false;
+  }, []);
 
   // Helper function to check if a date is disabled
   const isDateDisabled = useCallback(
@@ -446,9 +410,6 @@ export function DatePicker(props: DatePickerProps) {
     };
 
     if (mode === 'range') {
-      const now = new Date();
-      const roundedNow = roundHours(now);
-
       const roundedRange =
         tempRange && tempRange.startDate && tempRange.endDate
           ? {
@@ -457,9 +418,11 @@ export function DatePicker(props: DatePickerProps) {
             }
           : undefined;
 
-      roundedRange?.startDate.setHours(roundedNow.getHours());
-
       (onChange as (value: DateRange | undefined) => void)?.(roundedRange);
+    } else if (mode === 'time') {
+      const base = value ? new Date(value as Date) : new Date();
+      base.setHours(currentDate.getHours(), currentDate.getMinutes(), 0, 0);
+      (onChange as (value: Date | undefined) => void)?.(base);
     } else {
       const roundedDate = currentDate ? roundHours(currentDate) : undefined;
       (onChange as (value: Date | undefined) => void)?.(roundedDate);
@@ -731,7 +694,7 @@ export function DatePicker(props: DatePickerProps) {
   };
 
   const handleOpenPicker = () => {
-    setCurrentDate(new Date());
+    setCurrentDate(getCurrentDate());
     setViewMode('date');
     setShowMonthPicker(false);
     setShowYearPicker(false);
@@ -791,11 +754,7 @@ export function DatePicker(props: DatePickerProps) {
               <Button
                 onPress={handleConfirm}
                 className="flex-1 rounded-full"
-                disabled={
-                  mode === 'range' &&
-                  (!tempRange.endDate ||
-                    tempRange.startDate?.getDate() === tempRange.endDate?.getDate())
-                }>
+                disabled={mode === 'range' && !tempRange.endDate}>
                 <Text>Xong</Text>
               </Button>
             )}
