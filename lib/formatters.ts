@@ -24,7 +24,9 @@ export function formatRange(startTime: Date | null, endTime: Date | null) {
 }
 
 export function formatDateTime(date: Date): string {
-  return date.toISOString().slice(0, 19);
+  const GMT7_OFFSET_MS = 7 * 60 * 60 * 1000;
+  const gmt7 = new Date(date.getTime() + GMT7_OFFSET_MS);
+  return gmt7.toISOString().slice(0, 19);
 }
 
 export function parseDateTime(dateStr: string): Date {

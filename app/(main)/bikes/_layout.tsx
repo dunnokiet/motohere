@@ -14,6 +14,14 @@ export default function BikesLayout() {
           headerLeft: () => <BackButton />,
         }}
       />
+      <Stack.Screen
+        name="confirm"
+        options={{
+          title: 'Xác nhận đặt xe',
+          headerTransparent: true,
+          headerLeft: () => <BackButton />,
+        }}
+      />
     </Stack>
   );
 }
