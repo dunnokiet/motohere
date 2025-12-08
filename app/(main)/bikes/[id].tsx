@@ -118,7 +118,7 @@ export default function BikeDetailScreen() {
           <Text className="text-2xl font-semibold text-emerald-300">
             {formatPrice(bike?.pricePerHour || 0)}
           </Text>
-          <Text className="font-semibold text-accent"> / ngày</Text>
+          <Text className="font-semibold text-accent"> / giờ</Text>
         </View>
         <Button className="flex-1 rounded-full" variant="secondary" onPress={handleBookPress}>
           <Text>Đặt xe</Text>

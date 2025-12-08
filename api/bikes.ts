@@ -11,21 +11,25 @@ export interface Location {
   name: string;
   province: string;
   ward: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Bike {
-  id: string;
+  id?: string;
+  ownerId?: number;
   brand: string;
   model: string;
+  licensePlate?: string;
   year: number;
   pricePerHour: number;
   images: BikeImage[];
-  distance: number;
-  locationName: string;
-  province: string;
-  ward: string;
-  longitude: number;
-  latitude: number;
+  distance?: number;
+  locationName?: string;
+  province?: string;
+  ward?: string;
+  longitude?: number;
+  latitude?: number;
 }
 
 export interface Review {}
@@ -56,6 +60,8 @@ export interface SearchBikesParams {
   size?: number;
   latitude?: number;
   longitude?: number;
+  ownerId?: number;
+  sortBy?: string;
 }
 
 export function parseImages(imagesJson: string): BikeImage[] {
@@ -181,3 +187,113 @@ export const getBikeById = async (
 
   return { bikeDetail };
 };
+
+export const createBike = async (
+  car: Bike,
+  images: File[],
+  accessToken: string | null
+): Promise<void> => {
+  if (!accessToken) throw new Error('No access token');
+
+  const formData = new FormData();
+
+  formData.append(
+    'car',
+    new Blob([JSON.stringify(car)], {
+      type: 'application/json',
+    })
+  );
+
+  images.forEach((image) => {
+    formData.append('images', image);
+  });
+
+  const response = await fetch(`${API_URL}/managemention-cars/create`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || result.status !== 200) {
+    throw new Error(result.message[0]);
+  }
+};
+
+export const deleteBike = async (
+  carId: string,
+  ownerId: string,
+  accessToken: string
+): Promise<void> => {
+  if (!accessToken) throw new Error('No access token');
+
+  const data = {
+    carId,
+    ownerId,
+  };
+
+  const response = await fetch(`${API_URL}/managemention-cars/delete`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || result.status !== 200) {
+    throw new Error(result.message[0]);
+  }
+};
+
+export async function getListBikesOwner(
+  params: SearchBikesParams,
+  accessToken: string | null
+): Promise<{ bikes: Bike[]; total: number }> {
+  if (!accessToken) throw new Error('No access token');
+
+  const queryParams = new URLSearchParams();
+
+  if (params.brand) queryParams.append('brand', params.brand);
+  if (params.year) queryParams.append('year', params.year.toString());
+  if (params.province) queryParams.append('province', params.province);
+  if (params.ward) queryParams.append('ward', params.ward);
+  if (params.minPrice) queryParams.append('minPrice', params.minPrice.toString());
+  if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice.toString());
+  queryParams.append('page', (params.page || 1).toString());
+  queryParams.append('size', (params.size || 10).toString());
+  if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+  if (params.ownerId) queryParams.append('ownerId', params.ownerId.toString());
+
+  const response = await fetch(
+    `${API_URL}/managemention-cars/?page=1&size=10&${queryParams.toString()}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok || result.status !== 200) {
+    throw new Error(result.message[0]);
+  }
+
+  const total = result.pagination.totalElements;
+  const bikes: Bike[] = result.data.map((bike: any) => ({
+    ...bike,
+    images: parseImages(bike.images),
+  }));
+
+  return {
+    total,
+    bikes,
+  };
+}

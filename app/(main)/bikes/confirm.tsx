@@ -56,9 +56,8 @@ export default function ConfirmBookingScreen() {
     if (!startTime || !endTime) return 0;
 
     const hours = getRentalHours(startTime, endTime);
-    const days = Math.max(1, Math.ceil(hours / 24));
 
-    return days * pricePerHour;
+    return hours * pricePerHour;
   }, [startTime, endTime, pricePerHour]);
 
   const handleConfirm = async () => {
@@ -214,7 +213,6 @@ export default function ConfirmBookingScreen() {
                   value={endTime || undefined}
                   onChange={handleEndTimeChange}
                   disabled={!rangeEndDate}
-                  // bỏ minimumDate ở đây
                 />
               </View>
             </View>
@@ -226,7 +224,7 @@ export default function ConfirmBookingScreen() {
             <Text className="text-base text-muted-foreground">Tổng giá tạm tính</Text>
             <Text className="text-2xl font-semibold">{totalPrice.toLocaleString('vi-VN')} VND</Text>
             <Text className="text-xs text-muted-foreground">
-              Giá dựa trên số ngày thuê và đơn giá {pricePerHour.toLocaleString('vi-VN')} VND/ngày
+              Giá dựa trên số ngày thuê và đơn giá {pricePerHour.toLocaleString('vi-VN')} VND/giờ
             </Text>
           </View>
         </View>
