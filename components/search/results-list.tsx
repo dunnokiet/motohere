@@ -83,7 +83,7 @@ export function ResultsList() {
                   <Text className="font-medium text-emerald-700">
                     {formatPrice(bike.pricePerHour)}
                   </Text>
-                  <Text className="text-sm">/ ngày</Text>
+                  <Text className="text-sm">/ giờ</Text>
                 </View>
               </View>
             </View>

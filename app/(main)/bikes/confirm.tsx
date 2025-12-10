@@ -1,4 +1,4 @@
-import { createBooking } from '@/api/booking';
+import { createBooking } from '@/api/bookings';
 import { RentalDuration, getRentalHours } from '@/components/rental-duration';
 import { DatePicker } from '@/components/search/date-picker';
 import { Button } from '@/components/ui/button';
