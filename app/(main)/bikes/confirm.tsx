@@ -9,7 +9,6 @@ import { useSearchStore } from '@/store/searchStore';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ConfirmBookingScreen() {
   const { user } = useAuthStore();
@@ -172,7 +171,7 @@ export default function ConfirmBookingScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background p-4 pt-20">
+    <View className="flex-1 bg-background p-4 pt-24">
       <View className="flex-1 justify-between gap-8">
         <View className="gap-6">
           <View className="gap-2">
@@ -230,7 +229,7 @@ export default function ConfirmBookingScreen() {
         </View>
 
         <Button
-          className="rounded-full"
+          className="mb-4 rounded-full"
           disabled={
             !startTime || !endTime || totalPrice <= 0 || getRentalHours(startTime, endTime) === 0
           }
@@ -238,6 +237,6 @@ export default function ConfirmBookingScreen() {
           <Text>Xác nhận đặt xe</Text>
         </Button>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }

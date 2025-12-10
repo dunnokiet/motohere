@@ -54,13 +54,12 @@ export interface SearchBikesParams {
   ward?: string;
   minPrice?: number;
   maxPrice?: number;
-  startTime: string;
-  endTime: string;
+  startTime?: string;
+  endTime?: string;
   page?: number;
   size?: number;
   latitude?: number;
   longitude?: number;
-  ownerId?: number;
   sortBy?: string;
 }
 
@@ -96,8 +95,8 @@ export async function searchBikes(
   if (params.ward) queryParams.append('ward', params.ward);
   if (params.minPrice) queryParams.append('minPrice', params.minPrice.toString());
   if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice.toString());
-  queryParams.append('startTime', params.startTime);
-  queryParams.append('endTime', params.endTime);
+  if (params.startTime) queryParams.append('startTime', params.startTime);
+  if (params.endTime) queryParams.append('endTime', params.endTime);
   queryParams.append('page', (params.page || 1).toString());
   queryParams.append('size', (params.size || 10).toString());
   if (params.latitude) queryParams.append('latitude', params.latitude.toString());
@@ -253,6 +252,7 @@ export const deleteBike = async (
 
 export async function getListBikesOwner(
   params: SearchBikesParams,
+  id: string,
   accessToken: string | null
 ): Promise<{ bikes: Bike[]; total: number }> {
   if (!accessToken) throw new Error('No access token');
@@ -265,13 +265,12 @@ export async function getListBikesOwner(
   if (params.ward) queryParams.append('ward', params.ward);
   if (params.minPrice) queryParams.append('minPrice', params.minPrice.toString());
   if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice.toString());
-  queryParams.append('page', (params.page || 1).toString());
-  queryParams.append('size', (params.size || 10).toString());
+  if (params.page) queryParams.append('page', params.page.toString());
+  if (params.size) queryParams.append('size', params.size.toString());
   if (params.sortBy) queryParams.append('sortBy', params.sortBy);
-  if (params.ownerId) queryParams.append('ownerId', params.ownerId.toString());
 
   const response = await fetch(
-    `${API_URL}/managemention-cars/?page=1&size=10&${queryParams.toString()}`,
+    `${API_URL}/managemention-cars/?ownerId=${Number(id)}&${queryParams.toString()}`,
     {
       headers: {
         'Content-Type': 'application/json',
