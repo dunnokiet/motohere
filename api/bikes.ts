@@ -35,16 +35,17 @@ export interface Bike {
 export interface Review {}
 
 export interface BikeDetail {
-  username: string;
-  phoneNumber: string;
+  ownerId: number;
+  username?: string;
+  phoneNumber?: string;
   brand: string;
   model: string;
   licensePlate: string;
   year: number;
   pricePerHour: number;
   location: Location;
-  images: BikeImage[];
-  reviews: Review[];
+  images?: BikeImage[];
+  reviews?: Review[];
 }
 
 export interface SearchBikesParams {
@@ -187,24 +188,19 @@ export const getBikeById = async (
   return { bikeDetail };
 };
 
-export const createBike = async (
-  car: Bike,
-  images: File[],
-  accessToken: string | null
-): Promise<void> => {
+export const createBike = async (car: BikeDetail, images: any[], accessToken: string | null) => {
   if (!accessToken) throw new Error('No access token');
 
   const formData = new FormData();
 
-  formData.append(
-    'car',
-    new Blob([JSON.stringify(car)], {
-      type: 'application/json',
-    })
-  );
+  formData.append('car', JSON.stringify(car));
 
-  images.forEach((image) => {
-    formData.append('images', image);
+  images.forEach((img) => {
+    formData.append('images', {
+      uri: img.uri,
+      name: img.name,
+      type: img.type,
+    } as any);
   });
 
   const response = await fetch(`${API_URL}/managemention-cars/create`, {
@@ -216,9 +212,8 @@ export const createBike = async (
   });
 
   const result = await response.json();
-
   if (!response.ok || result.status !== 200) {
-    throw new Error(result.message[0]);
+    throw new Error(result.message?.[0] || 'Upload failed');
   }
 };
 
