@@ -10,6 +10,7 @@ export interface Booking {
   startTime: string;
   endTime: string;
   totalPrice: number;
+  status?: string;
 }
 
 export interface Review {
@@ -103,7 +104,7 @@ export async function getListsBookings(
   if (params.startTime) queryParams.append('startTime', params.startTime);
   if (params.endTime) queryParams.append('endTime', params.endTime);
 
-  const response = await fetch(`${API_URL}/retion/bookings?${queryParams.toString()}`, {
+  const response = await fetch(`${API_URL}/rention/bookings?${queryParams.toString()}`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
@@ -117,7 +118,10 @@ export async function getListsBookings(
 
   const bookings: Booking[] = result.data.map((booking: any) => ({
     ...booking,
-    images: parseImages(booking.car.images),
+    car: {
+      ...booking.car,
+      images: parseImages(booking.car.images),
+    },
   }));
 
   return { bookings };
