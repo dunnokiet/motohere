@@ -9,16 +9,17 @@ import { Text } from '@/components/ui/text';
 import { useAuthStore } from '@/store/authStore';
 import { IconChevronDown } from '@tabler/icons-react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   View,
-  Platform,
 } from 'react-native';
 
 type LocalImage = {
@@ -76,9 +77,16 @@ export default function CreateBikeScreen() {
 
     if (!result.canceled && result.assets.length > 0) {
       const asset = result.assets[0];
-      const uri = asset.uri;
-      const name = uri.split('/').pop() || `image_${Date.now()}.jpg`;
-      const type = asset.mimeType || 'image/jpeg';
+      const originalUri = asset.uri;
+
+      const manipulated = await ImageManipulator.manipulateAsync(originalUri, [], {
+        compress: 0.8,
+        format: ImageManipulator.SaveFormat.PNG,
+      });
+
+      const uri = manipulated.uri;
+      const name = `image_${Date.now()}.png`;
+      const type = 'image/png';
 
       setImages((prev) => [...prev, { uri, name, type }]);
     }
@@ -167,6 +175,9 @@ export default function CreateBikeScreen() {
           type: img.type,
         }) as unknown as File
     );
+
+    console.log(car);
+    console.log(files);
 
     try {
       setIsSubmitting(true);

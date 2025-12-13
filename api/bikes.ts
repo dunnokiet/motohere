@@ -206,6 +206,7 @@ export const createBike = async (car: BikeDetail, images: any[], accessToken: st
   const response = await fetch(`${API_URL}/managemention-cars/create`, {
     method: 'POST',
     headers: {
+      'Content-Type': 'multipart/form-data',
       Authorization: `Bearer ${accessToken}`,
     },
     body: formData,
