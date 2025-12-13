@@ -11,36 +11,41 @@ export interface Location {
   name: string;
   province: string;
   ward: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Bike {
-  id: string;
+  id?: string;
+  ownerId?: number;
   brand: string;
   model: string;
+  licensePlate?: string;
   year: number;
   pricePerHour: number;
   images: BikeImage[];
-  distance: number;
-  locationName: string;
-  province: string;
-  ward: string;
-  longitude: number;
-  latitude: number;
+  distance?: number;
+  locationName?: string;
+  province?: string;
+  ward?: string;
+  longitude?: number;
+  latitude?: number;
 }
 
 export interface Review {}
 
 export interface BikeDetail {
-  username: string;
-  phoneNumber: string;
+  ownerId: number;
+  username?: string;
+  phoneNumber?: string;
   brand: string;
   model: string;
   licensePlate: string;
   year: number;
   pricePerHour: number;
   location: Location;
-  images: BikeImage[];
-  reviews: Review[];
+  images?: BikeImage[];
+  reviews?: Review[];
 }
 
 export interface SearchBikesParams {
@@ -50,12 +55,13 @@ export interface SearchBikesParams {
   ward?: string;
   minPrice?: number;
   maxPrice?: number;
-  startTime: string;
-  endTime: string;
+  startTime?: string;
+  endTime?: string;
   page?: number;
   size?: number;
   latitude?: number;
   longitude?: number;
+  sortBy?: string;
 }
 
 export function parseImages(imagesJson: string): BikeImage[] {
@@ -90,8 +96,8 @@ export async function searchBikes(
   if (params.ward) queryParams.append('ward', params.ward);
   if (params.minPrice) queryParams.append('minPrice', params.minPrice.toString());
   if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice.toString());
-  queryParams.append('startTime', params.startTime);
-  queryParams.append('endTime', params.endTime);
+  if (params.startTime) queryParams.append('startTime', params.startTime);
+  if (params.endTime) queryParams.append('endTime', params.endTime);
   queryParams.append('page', (params.page || 1).toString());
   queryParams.append('size', (params.size || 10).toString());
   if (params.latitude) queryParams.append('latitude', params.latitude.toString());
@@ -181,3 +187,108 @@ export const getBikeById = async (
 
   return { bikeDetail };
 };
+
+export const createBike = async (car: BikeDetail, images: any[], accessToken: string | null) => {
+  if (!accessToken) throw new Error('No access token');
+
+  const formData = new FormData();
+
+  formData.append('car', JSON.stringify(car));
+
+  images.forEach((img) => {
+    formData.append('images', {
+      uri: img.uri,
+      name: img.name,
+      type: img.type,
+    } as any);
+  });
+
+  const response = await fetch(`${API_URL}/managemention-cars/create`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+  });
+
+  const result = await response.json();
+  if (!response.ok || result.status !== 200) {
+    throw new Error(result.message?.[0] || 'Upload failed');
+  }
+};
+
+export const deleteBike = async (
+  carId: string,
+  ownerId: string,
+  accessToken: string
+): Promise<void> => {
+  if (!accessToken) throw new Error('No access token');
+
+  const data = {
+    carId,
+    ownerId,
+  };
+
+  const response = await fetch(`${API_URL}/managemention-cars/delete`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || result.status !== 200) {
+    throw new Error(result.message[0]);
+  }
+};
+
+export async function getListBikesOwner(
+  params: SearchBikesParams,
+  id: string,
+  accessToken: string | null
+): Promise<{ bikes: Bike[]; total: number }> {
+  if (!accessToken) throw new Error('No access token');
+
+  const queryParams = new URLSearchParams();
+
+  if (params.brand) queryParams.append('brand', params.brand);
+  if (params.year) queryParams.append('year', params.year.toString());
+  if (params.province) queryParams.append('province', params.province);
+  if (params.ward) queryParams.append('ward', params.ward);
+  if (params.minPrice) queryParams.append('minPrice', params.minPrice.toString());
+  if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice.toString());
+  if (params.page) queryParams.append('page', params.page.toString());
+  if (params.size) queryParams.append('size', params.size.toString());
+  if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+
+  const response = await fetch(
+    `${API_URL}/managemention-cars/?ownerId=${Number(id)}&${queryParams.toString()}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  const result = await response.json();
+
+  if (!response.ok || result.status !== 200) {
+    throw new Error(result.message[0]);
+  }
+
+  const total = result.pagination.totalElements;
+  const bikes: Bike[] = result.data.map((bike: any) => ({
+    ...bike,
+    images: parseImages(bike.images),
+  }));
+
+  return {
+    total,
+    bikes,
+  };
+}

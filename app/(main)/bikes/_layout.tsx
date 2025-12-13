@@ -7,6 +7,14 @@ export default function BikesLayout() {
   return (
     <Stack>
       <Stack.Screen
+        name="create"
+        options={{
+          title: 'Thêm xe cho thuê',
+          headerTransparent: true,
+          headerLeft: () => <BackButton />,
+        }}
+      />
+      <Stack.Screen
         name="[id]"
         options={{
           title: 'Chi tiết xe',

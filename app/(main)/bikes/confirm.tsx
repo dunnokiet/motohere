@@ -1,4 +1,4 @@
-import { createBooking } from '@/api/booking';
+import { createBooking } from '@/api/bookings';
 import { RentalDuration, getRentalHours } from '@/components/rental-duration';
 import { DatePicker } from '@/components/search/date-picker';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import { useSearchStore } from '@/store/searchStore';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Alert, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ConfirmBookingScreen() {
   const { user } = useAuthStore();
@@ -56,9 +55,8 @@ export default function ConfirmBookingScreen() {
     if (!startTime || !endTime) return 0;
 
     const hours = getRentalHours(startTime, endTime);
-    const days = Math.max(1, Math.ceil(hours / 24));
 
-    return days * pricePerHour;
+    return hours * pricePerHour;
   }, [startTime, endTime, pricePerHour]);
 
   const handleConfirm = async () => {
@@ -173,7 +171,7 @@ export default function ConfirmBookingScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background p-4 pt-20">
+    <View className="flex-1 bg-background p-4 pt-24">
       <View className="flex-1 justify-between gap-8">
         <View className="gap-6">
           <View className="gap-2">
@@ -214,7 +212,6 @@ export default function ConfirmBookingScreen() {
                   value={endTime || undefined}
                   onChange={handleEndTimeChange}
                   disabled={!rangeEndDate}
-                  // bỏ minimumDate ở đây
                 />
               </View>
             </View>
@@ -226,13 +223,13 @@ export default function ConfirmBookingScreen() {
             <Text className="text-base text-muted-foreground">Tổng giá tạm tính</Text>
             <Text className="text-2xl font-semibold">{totalPrice.toLocaleString('vi-VN')} VND</Text>
             <Text className="text-xs text-muted-foreground">
-              Giá dựa trên số ngày thuê và đơn giá {pricePerHour.toLocaleString('vi-VN')} VND/ngày
+              Giá dựa trên số ngày thuê và đơn giá {pricePerHour.toLocaleString('vi-VN')} VND/giờ
             </Text>
           </View>
         </View>
 
         <Button
-          className="rounded-full"
+          className="mb-4 rounded-full"
           disabled={
             !startTime || !endTime || totalPrice <= 0 || getRentalHours(startTime, endTime) === 0
           }
@@ -240,6 +237,6 @@ export default function ConfirmBookingScreen() {
           <Text>Xác nhận đặt xe</Text>
         </Button>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
