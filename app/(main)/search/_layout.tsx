@@ -40,6 +40,13 @@ export default function SearchLayout() {
           headerLeft: () => <CloseButton />,
         }}
       />
+      <Stack.Screen
+        name="filters"
+        options={{
+          title: 'Bộ lọc',
+          headerLeft: () => <CloseButton />,
+        }}
+      />
     </Stack>
   );
 }

@@ -5,12 +5,18 @@ import { useAuthStore } from '@/store/authStore';
 import * as React from 'react';
 import { ActivityIndicator, FlatList, Image, View, Pressable } from 'react-native';
 import { router } from 'expo-router';
+import { FilterBar } from '@/components/search/filter-bar';
+import { useSearchStore } from '@/store/searchStore';
+import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
+import { IconDots } from '@tabler/icons-react-native';
 
 export default function ControlsScreen() {
   const [bikes, setBikes] = React.useState<Bike[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const { user } = useAuthStore();
+  const { brand, minPrice, maxPrice, year } = useSearchStore();
 
   React.useEffect(() => {
     let cancelled = false;
@@ -20,7 +26,16 @@ export default function ControlsScreen() {
     const fetchBikes = async () => {
       try {
         setLoading(true);
-        const { bikes } = await getListBikesOwner({}, user.userId, user.accessToken);
+        const { bikes } = await getListBikesOwner(
+          {
+            brand: brand || undefined,
+            minPrice: minPrice ?? undefined,
+            maxPrice: maxPrice ?? undefined,
+            year: year ?? undefined,
+          },
+          user.userId,
+          user.accessToken
+        );
 
         if (!cancelled) {
           setBikes(bikes);
@@ -40,7 +55,7 @@ export default function ControlsScreen() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, brand, minPrice, maxPrice, year]);
 
   if (loading) {
     return (
@@ -60,7 +75,7 @@ export default function ControlsScreen() {
 
   return (
     <View className="flex-1 bg-background px-4 pb-4 pt-24">
-      <View className="mb-4 flex-row justify-end">
+      <View className="mb-4 flex-row items-center justify-between">
         <Pressable
           className="rounded-full bg-primary px-4 py-2"
           onPress={() => {
@@ -68,6 +83,18 @@ export default function ControlsScreen() {
           }}>
           <Text className="font-semibold text-primary-foreground">Thêm xe</Text>
         </Pressable>
+
+        <Button
+          size="icon"
+          className="rounded-full"
+          variant="ghost"
+          onPress={() => router.push('/(main)/search/filters')}>
+          <Icon as={IconDots} className="size-5" />
+        </Button>
+      </View>
+
+      <View className="mb-4">
+        <FilterBar />
       </View>
 
       {bikes.length === 0 ? (

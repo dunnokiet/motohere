@@ -14,17 +14,29 @@ import { Text } from '../ui/text';
 
 export function ResultsList() {
   const { user } = useAuthStore();
-  const { location, startTime, endTime, brand } = useSearchStore();
+  const { location, startTime, endTime, brand, minPrice, maxPrice, year } = useSearchStore();
 
   const { isPending, error, data } = useQuery({
-    queryKey: ['searchBikes', location?.province, startTime, endTime, brand],
+    queryKey: [
+      'searchBikes',
+      location?.province,
+      startTime,
+      endTime,
+      brand,
+      minPrice,
+      maxPrice,
+      year,
+    ],
     queryFn: () =>
       searchBikes(
         {
           startTime: formatDateTime(startTime!),
           endTime: formatDateTime(endTime!),
-          brand: brand!,
+          brand: brand || undefined,
           province: location?.province,
+          minPrice: minPrice ?? undefined,
+          maxPrice: maxPrice ?? undefined,
+          year: year ?? undefined,
         },
         user?.accessToken || null
       ),
@@ -46,7 +58,7 @@ export function ResultsList() {
 
   if (error) {
     <View className="h-80 border border-destructive bg-destructive-foreground">
-      <Text className="text-destructive">{error.message}</Text>
+      <Text className="text-destructive">{(error as any).message}</Text>
     </View>;
   }
 

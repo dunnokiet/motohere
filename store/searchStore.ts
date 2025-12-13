@@ -13,11 +13,17 @@ interface SearchStore {
   location: Location | null;
   startTime: Date | null;
   endTime: Date | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  year: number | null;
 
   setBrand: (brand: string | null) => void;
   setLocation: (location: Location | null) => void;
   setStartTime: (startTime: Date | null) => void;
   setEndTime: (endTime: Date | null) => void;
+  setMinPrice: (minPrice: number | null) => void;
+  setMaxPrice: (maxPrice: number | null) => void;
+  setYear: (year: number | null) => void;
   setDefaultSearch: () => void;
 }
 
@@ -26,14 +32,28 @@ export const useSearchStore = create<SearchStore>()((set, get) => ({
   location: null,
   startTime: null,
   endTime: null,
+  minPrice: null,
+  maxPrice: null,
+  year: null,
 
   setBrand: (brand) => set({ brand }),
   setLocation: (location) => set({ location }),
   setStartTime: (startTime) => set({ startTime }),
   setEndTime: (endTime) => set({ endTime }),
+  setMinPrice: (minPrice) => set({ minPrice }),
+  setMaxPrice: (maxPrice) => set({ maxPrice }),
+  setYear: (year) => set({ year }),
 
   setDefaultSearch: () => {
-    set({ location: null, brand: null, startTime: null, endTime: null });
+    set({
+      location: null,
+      brand: null,
+      startTime: null,
+      endTime: null,
+      minPrice: null,
+      maxPrice: null,
+      year: null,
+    });
 
     const { location, startTime, endTime } = get();
 
@@ -49,11 +69,11 @@ export const useSearchStore = create<SearchStore>()((set, get) => ({
     }
 
     if (!startTime || !endTime) {
-      const { startTime: sT, endTime: eT } = getDefaultTimeRange();
-      updates.startTime = parseDateTime(sT);
-      updates.endTime = parseDateTime(eT);
+      const { startTime: defaultStart, endTime: defaultEnd } = getDefaultTimeRange();
+      updates.startTime = parseDateTime(defaultStart);
+      updates.endTime = parseDateTime(defaultEnd);
     }
 
-    if (Object.keys(updates).length > 0) set(updates);
+    set(updates);
   },
 }));
