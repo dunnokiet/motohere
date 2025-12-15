@@ -145,7 +145,10 @@ export async function getDetailBookings(id: string, accessToken: string | null) 
 
   const bookingDetail: BookingDetail = {
     ...result.data,
-    images: parseImages(result.data.images),
+    car: {
+      ...result.data.car,
+      images: parseImages(result.data.car.images),
+    },
   };
 
   return { bookingDetail };
