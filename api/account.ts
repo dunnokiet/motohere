@@ -1,12 +1,14 @@
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export interface Account {
-  id?: number;
-  username?: string;
+  id: number;
+  username: string;
   email: string;
   phone: string;
-  birthDate?: string;
+  birthDate: string;
 }
+
+export type UpdateAccountPayload = Pick<Account, 'email' | 'phone' | 'birthDate'>;
 
 export const getInformationAccount = async (accessToken: string | null) => {
   if (!accessToken) throw new Error('No access token');
@@ -27,7 +29,10 @@ export const getInformationAccount = async (accessToken: string | null) => {
   return { accountDetail };
 };
 
-export const updateInformationAccount = async (account: Account, accessToken: string | null) => {
+export const updateInformationAccount = async (
+  account: UpdateAccountPayload,
+  accessToken: string | null
+) => {
   if (!accessToken) throw new Error('No access token');
 
   const response = await fetch(`${API_URL}/managemention-account/update-information`, {
