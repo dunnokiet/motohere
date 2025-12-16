@@ -24,7 +24,18 @@ export function formatRange(startTime: Date | null, endTime: Date | null) {
 }
 
 export function formatDateTime(date: Date): string {
-  return date.toISOString().slice(0, 19);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hour = pad(date.getHours());
+  const minute = pad(date.getMinutes());
+  const second = pad(date.getSeconds());
+
+  const offset = '+07:00';
+
+  return `${year}-${month}-${day}T${hour}:${minute}:${second}${offset}`;
 }
 
 export function parseDateTime(dateStr: string): Date {
@@ -32,8 +43,16 @@ export function parseDateTime(dateStr: string): Date {
 }
 
 export function getDefaultTimeRange(): { startTime: string; endTime: string } {
-  const start = new Date();
-  start.setHours(8, 0, 0, 0);
+  const now = new Date();
+
+  const minStart = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+  const start = new Date(minStart);
+  start.setMinutes(0, 0, 0);
+
+  if (start.getHours() < 8) {
+    start.setHours(8, 0, 0, 0);
+  }
 
   const end = new Date(start);
   end.setDate(end.getDate() + 3);

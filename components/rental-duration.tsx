@@ -1,4 +1,3 @@
-import { differenceInHours } from 'date-fns';
 import { useMemo } from 'react';
 import { View } from 'react-native';
 import { Text } from './ui/text';
@@ -8,18 +7,25 @@ interface RentalDurationProps {
   endTime: Date | null;
 }
 
+export function getRentalHours(startTime: Date, endTime: Date): number {
+  const diffMs = endTime.getTime() - startTime.getTime();
+  if (diffMs <= 0) return 0;
+  return Math.ceil(diffMs / (1000 * 60 * 60));
+}
+
 export function RentalDuration({ startTime, endTime }: RentalDurationProps) {
   const durationText = useMemo(() => {
     if (!startTime || !endTime) return '';
 
-    const diffHours = differenceInHours(endTime, startTime);
-    const days = Math.floor(diffHours / 24);
-    const hours = diffHours % 24;
+    const hours = getRentalHours(startTime, endTime);
+    if (hours === 0) return '0 giờ';
 
-    if (days === 0 && hours === 0) return '0 giờ';
-    if (days === 0) return `${hours} giờ`;
-    if (hours === 0) return `${days} ngày`;
-    return `${days} ngày ${hours} giờ`;
+    const days = Math.floor(hours / 24);
+    const remainingHours = hours % 24;
+
+    if (days === 0) return `${remainingHours} giờ`;
+    if (remainingHours === 0) return `${days} ngày`;
+    return `${days} ngày ${remainingHours} giờ`;
   }, [startTime, endTime]);
 
   return (

@@ -14,6 +14,8 @@ export function DateTimeForm() {
   };
 
   const minDate = new Date();
+  minDate.setHours(0, 0, 0, 0);
+
   const maxDate = new Date(minDate);
   maxDate.setMonth(minDate.getMonth() + 3);
 
@@ -39,7 +41,6 @@ export function DateTimeForm() {
                 value={startTime || undefined}
                 onChange={setStartTime}
                 disabled={!startTime}
-                minimumDate={minDate}
               />
             </View>
             <View className="flex-1">

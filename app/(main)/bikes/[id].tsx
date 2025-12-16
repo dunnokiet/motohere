@@ -1,4 +1,4 @@
-import { getBikeById } from '@/api/bikes';
+import { deleteBike, getBikeById } from '@/api/bikes';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselItem } from '@/components/ui/carousel';
@@ -10,14 +10,19 @@ import { useAuthStore } from '@/store/authStore';
 import { IconHeart, IconMapPin, IconPhone } from '@tabler/icons-react-native';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { useLocalSearchParams } from 'expo-router';
-import { ScrollView, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
+import { Alert, ScrollView, View } from 'react-native';
 import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function BikeDetailScreen() {
-  const { id } = useLocalSearchParams();
+  const { id, mode } = useLocalSearchParams<{ id: string; mode?: string }>();
+  const isOwnerMode = mode === 'owner';
+
   const { user } = useAuthStore();
+
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isPending, error } = useQuery({
     queryKey: ['bike', id],
@@ -28,6 +33,48 @@ export default function BikeDetailScreen() {
   const bike = data?.bikeDetail;
 
   const bottom = useBottomTabOverflow();
+
+  const handleBookPress = () => {
+    if (!bike) return;
+
+    router.push({
+      pathname: '/(main)/bikes/confirm',
+      params: {
+        carId: id as string,
+        pricePerHour: bike.pricePerHour.toString(),
+        customerId: user?.userId,
+        title: `${bike.brand} ${bike.model}`,
+      },
+    });
+  };
+
+  const handleEditBike = () => {
+    Alert.alert('Thông báo', 'Chức năng sửa xe sẽ được cập nhật sau.');
+  };
+
+  const handleDeleteBike = () => {
+    if (!id || !user) return;
+
+    Alert.alert('Xóa xe', 'Bạn có chắc chắn muốn xóa xe này?', [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Xóa',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            setIsDeleting(true);
+            await deleteBike(String(id), String(user.userId), user.accessToken);
+            Alert.alert('Thành công', 'Đã xóa xe thành công');
+            router.back();
+          } catch (error: any) {
+            Alert.alert('Lỗi', error?.message ?? 'Không thể xóa xe, vui lòng thử lại.');
+          } finally {
+            setIsDeleting(false);
+          }
+        },
+      },
+    ]);
+  };
 
   return (
     <SafeAreaView className="relative flex-1 bg-background p-4 pt-20">
@@ -104,11 +151,27 @@ export default function BikeDetailScreen() {
           <Text className="text-2xl font-semibold text-emerald-300">
             {formatPrice(bike?.pricePerHour || 0)}
           </Text>
-          <Text className="font-semibold text-accent"> / ngày</Text>
+          <Text className="font-semibold text-accent"> / giờ</Text>
         </View>
-        <Button className="flex-1 rounded-full" variant="secondary">
-          <Text>Đặt xe</Text>
-        </Button>
+
+        {isOwnerMode ? (
+          <>
+            <Button className="flex-1 rounded-full" variant="secondary" onPress={handleEditBike}>
+              <Text>Sửa xe</Text>
+            </Button>
+            <Button
+              className="flex-1 rounded-full"
+              variant="destructive"
+              onPress={handleDeleteBike}
+              disabled={isDeleting}>
+              <Text>{isDeleting ? 'Đang xóa...' : 'Xóa xe'}</Text>
+            </Button>
+          </>
+        ) : (
+          <Button className="flex-1 rounded-full" variant="secondary" onPress={handleBookPress}>
+            <Text>Đặt xe</Text>
+          </Button>
+        )}
       </View>
     </SafeAreaView>
   );
