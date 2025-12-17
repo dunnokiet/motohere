@@ -1,8 +1,6 @@
 import { Icon } from '@/components/ui/icon';
 import { THEME } from '@/lib/theme';
 import {
-  IconBell,
-  IconBellFilled,
   IconDeviceRemote,
   IconDeviceRemoteFilled,
   IconFileInvoice,
@@ -11,6 +9,8 @@ import {
   IconHelpCircleFilled,
   IconHome,
   IconHomeFilled,
+  IconUser,
+  IconUserFilled,
 } from '@tabler/icons-react-native';
 import { Tabs } from 'expo-router';
 import { LucideIcon } from 'lucide-react-native';
@@ -65,11 +65,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="notifications"
+        name="account"
         options={{
-          title: 'Thông báo',
+          title: 'Tài khoản',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon color={color} focused={focused} as={IconBell} asFilled={IconBellFilled} />
+            <TabBarIcon color={color} focused={focused} as={IconUser} asFilled={IconUserFilled} />
           ),
         }}
       />

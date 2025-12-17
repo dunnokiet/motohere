@@ -6,8 +6,9 @@ import { formatDateTime, formatRange, getDefaultTimeRange, parseDateTime } from 
 import { useAuthStore } from '@/store/authStore';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, View, Image } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, View, Image, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 type BookingStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
 
@@ -74,46 +75,57 @@ export default function BookingsScreen() {
     }
   };
 
+  const handlePressBooking = (booking: Booking) => {
+    if (!booking.bookingId) return;
+
+    router.push({
+      pathname: '/(main)/bookings/[id]',
+      params: { id: String(booking.bookingId) },
+    });
+  };
+
   const renderItem = ({ item }: { item: Booking }) => (
-    <View className="mb-4 overflow-hidden rounded-3xl border border-border bg-card shadow-sm shadow-black/5">
-      <View className="h-40 w-full overflow-hidden bg-secondary">
-        {item.car?.images?.[0]?.url && (
-          <Image
-            source={{ uri: item.car.images[0].url }}
-            style={{ width: '100%', height: '100%' }}
-          />
-        )}
-      </View>
-
-      <View className="gap-2 p-4">
-        <Text className="text-base font-semibold">
-          {item.car?.brand} {item.car?.model}
-        </Text>
-        <Text className="mt-1 text-sm text-muted-foreground">
-          {formatRange(new Date(item.startTime), new Date(item.endTime))}
-        </Text>
-        <Text className="mt-1 text-sm">
-          Tổng giá: {item.totalPrice.toLocaleString('vi-VN')} VND
-        </Text>
-
-        <View className="mt-3 flex-row items-center justify-between">
-          <Text className="text-xs font-medium text-muted-foreground">
-            {renderStatusLabel(item.status)}
-          </Text>
-
-          {item.status === 'PENDING' && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="rounded-full"
-              disabled={cancellingId === item.bookingId}
-              onPress={() => handleCancel(item)}>
-              <Text>{cancellingId === item.bookingId ? 'Đang hủy...' : 'Hủy yêu cầu'}</Text>
-            </Button>
+    <Pressable onPress={() => handlePressBooking(item)}>
+      <View className="mb-4 overflow-hidden rounded-3xl border border-border bg-card shadow-sm shadow-black/5">
+        <View className="h-40 w-full overflow-hidden bg-secondary">
+          {item.car?.images?.[0]?.url && (
+            <Image
+              source={{ uri: item.car.images[0].url }}
+              style={{ width: '100%', height: '100%' }}
+            />
           )}
         </View>
+
+        <View className="gap-2 p-4">
+          <Text className="text-base font-semibold">
+            {item.car?.brand} {item.car?.model}
+          </Text>
+          <Text className="mt-1 text-sm text-muted-foreground">
+            {formatRange(new Date(item.startTime), new Date(item.endTime))}
+          </Text>
+          <Text className="mt-1 text-sm">
+            Tổng giá: {item.totalPrice.toLocaleString('vi-VN')} VND
+          </Text>
+
+          <View className="mt-3 flex-row items-center justify-between">
+            <Text className="text-xs font-medium text-muted-foreground">
+              {renderStatusLabel(item.status)}
+            </Text>
+
+            {item.status === 'PENDING' && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-full"
+                disabled={cancellingId === item.bookingId}
+                onPress={() => handleCancel(item)}>
+                <Text>{cancellingId === item.bookingId ? 'Đang hủy...' : 'Hủy yêu cầu'}</Text>
+              </Button>
+            )}
+          </View>
+        </View>
       </View>
-    </View>
+    </Pressable>
   );
 
   if (!user) {

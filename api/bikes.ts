@@ -103,15 +103,12 @@ export async function searchBikes(
   if (params.latitude) queryParams.append('latitude', params.latitude.toString());
   if (params.longitude) queryParams.append('longitude', params.longitude.toString());
 
-  const response = await fetch(
-    `${API_URL}/rention/cars?page=1&size=100&0${queryParams.toString()}`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
+  const response = await fetch(`${API_URL}/rention/cars?${queryParams.toString()}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
   const result = await response.json();
 
@@ -263,7 +260,6 @@ export async function getListBikesOwner(
   if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice.toString());
   if (params.page) queryParams.append('page', params.page.toString());
   if (params.size) queryParams.append('size', params.size.toString());
-  if (params.sortBy) queryParams.append('sortBy', params.sortBy);
 
   const response = await fetch(
     `${API_URL}/managemention-cars/?ownerId=${Number(id)}&${queryParams.toString()}`,
