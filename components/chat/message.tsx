@@ -1,13 +1,14 @@
-import { UIMessage } from 'ai';
+import { MotoHereUIMessage } from '@/lib/ai/tools';
 import { Fragment } from 'react';
 import { Text, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { BikesListCard } from './tool-cards';
 
-export function Message({ message }: { message: UIMessage }) {
+export function Message({ message }: { message: MotoHereUIMessage }) {
   const isUser = message.role === 'user';
 
   const content = message.parts
-    .map((part) => {
+    .map((part, i) => {
       switch (part.type) {
         case 'text': {
           if (isUser) {
@@ -15,10 +16,17 @@ export function Message({ message }: { message: UIMessage }) {
           }
           return <Text>{part.text}</Text>;
         }
-        case 'tool-seachBikes': {
+        case 'tool-searchMotorbikes': {
           const { state } = part;
-
-          if (state === 'result') {
+          switch (state) {
+            case 'input-available':
+              return <Text key={i}>Đang tải xe máy...</Text>;
+            case 'output-available':
+              return <BikesListCard {...part.output} />;
+            case 'output-error':
+              return <Text key={i}>Error: {part.errorText}</Text>;
+            default:
+              return null;
           }
         }
         default:

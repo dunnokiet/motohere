@@ -1,32 +1,31 @@
-import * as BikesAPI from '@/api/bikes';
-import { tool } from 'ai';
+import { searchBikes } from '@/api/bikes';
+import { InferUITools, tool, ToolSet, UIDataTypes, UIMessage } from 'ai';
 import { z } from 'zod';
 import { getDefaultTimeRange } from '../formatters';
 
-export const searchBikes = (accessToken: string) =>
-  tool({
-    description:
-      'Tìm kiếm xe máy có sẵn theo địa điểm, hãng xe, giá và thời gian thuê. Trả về danh sách xe thực tế từ database với ảnh và thông tin chi tiết.',
-    inputSchema: z.object({
-      province: z.string().optional().describe('Tỉnh/Thành phố (VD: TP. HCM, TP. Hà Nội)'),
-      ward: z.string().optional().describe('Quận/Huyện'),
-      brand: z.string().optional().describe('Hãng xe (Honda, Yamaha, Suzuki, SYM)'),
-      year: z.number().optional().describe('Năm sản xuất'),
-      minPrice: z.number().optional().describe('Giá tối thiểu (VNĐ/giờ)'),
-      maxPrice: z.number().optional().describe('Giá tối đa (VNĐ/giờ)'),
-      startTime: z.string().optional().describe('Thời gian bắt đầu thuê (ISO)'),
-      endTime: z.string().optional().describe('Thời gian trả xe (ISO)'),
-      userLatitude: z.number().optional().describe('Vĩ độ vị trí người dùng'),
-      userLongitude: z.number().optional().describe('Kinh độ vị trí người dùng'),
-    }),
-    execute: async (params) => {
-      try {
+export function createToolSet(accessToken: string) {
+  const tools = {
+    searchMotorbikes: tool({
+      description: 'Tìm xe máy theo vị trí, hãng xe, thời gian…',
+      inputSchema: z.object({
+        province: z.string().optional(),
+        ward: z.string().optional(),
+        brand: z.string().optional(),
+        year: z.number().optional(),
+        minPrice: z.number().optional(),
+        maxPrice: z.number().optional(),
+        startTime: z.string().optional(),
+        endTime: z.string().optional(),
+        userLatitude: z.number().optional(),
+        userLongitude: z.number().optional(),
+      }),
+      execute: async (params) => {
         const timeRange =
           params.startTime && params.endTime
             ? { startTime: params.startTime, endTime: params.endTime }
             : getDefaultTimeRange();
 
-        const result = await BikesAPI.searchBikes(
+        const result = await searchBikes(
           {
             brand: params.brand,
             year: params.year,
@@ -44,27 +43,13 @@ export const searchBikes = (accessToken: string) =>
           accessToken
         );
 
-        if (!result.bikes || result.bikes.length === 0) {
-          return {
-            success: false,
-            message: 'Không tìm thấy xe phù hợp với yêu cầu',
-            total: 0,
-            bikes: [],
-            searchParams: { province: params.province, brand: params.brand, ...timeRange },
-          };
-        }
+        return { bikes: result.bikes };
+      },
+    }),
+  } satisfies ToolSet;
 
-        return {
-          total: result.total,
-          bikes: result.bikes,
-          searchParams: { province: params.province, brand: params.brand, ...timeRange },
-        };
-      } catch (error: any) {
-        return {
-          message: error.message || 'Lỗi khi tìm kiếm xe. Vui lòng thử lại.',
-          total: 0,
-          bikes: [],
-        };
-      }
-    },
-  });
+  return tools;
+}
+
+export type MotoHereUITools = InferUITools<ReturnType<typeof createToolSet>>;
+export type MotoHereUIMessage = UIMessage<never, UIDataTypes, MotoHereUITools>;

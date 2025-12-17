@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
 import { KeyboardPaddingView } from '@/components/ui/keyboard-padding';
+import { MotoHereUIMessage } from '@/lib/ai/tools';
 import { generateAPIUrl } from '@/lib/generators';
 import { useAuthStore } from '@/store/authStore';
 import { useChat } from '@ai-sdk/react';
@@ -20,7 +21,7 @@ export default function ChatScreen() {
 
   const [input, setInput] = useState('');
 
-  const { messages, error, sendMessage } = useChat({
+  const { messages, error, sendMessage } = useChat<MotoHereUIMessage>({
     transport: new DefaultChatTransport({
       fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl('/api/chat'),
