@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { useAuthStore } from '@/store/authStore';
 import { IconChevronDown } from '@tabler/icons-react-native';
-import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -175,9 +175,6 @@ export default function CreateBikeScreen() {
           type: img.type,
         }) as unknown as File
     );
-
-    console.log(car);
-    console.log(files);
 
     try {
       setIsSubmitting(true);

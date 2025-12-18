@@ -1,4 +1,5 @@
 import { getDefaultTimeRange } from '@/lib/formatters';
+import { generateAPIUrl } from '@/lib/generators';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL!;
 
@@ -200,10 +201,9 @@ export const createBike = async (car: BikeDetail, images: any[], accessToken: st
     } as any);
   });
 
-  const response = await fetch(`${API_URL}/managemention-cars/create`, {
+  const response = await fetch(generateAPIUrl('/api/bikes/create'), {
     method: 'POST',
     headers: {
-      'Content-Type': 'multipart/form-data',
       Authorization: `Bearer ${accessToken}`,
     },
     body: formData,
@@ -258,11 +258,9 @@ export async function getListBikesOwner(
   if (params.ward) queryParams.append('ward', params.ward);
   if (params.minPrice) queryParams.append('minPrice', params.minPrice.toString());
   if (params.maxPrice) queryParams.append('maxPrice', params.maxPrice.toString());
-  if (params.page) queryParams.append('page', params.page.toString());
-  if (params.size) queryParams.append('size', params.size.toString());
 
   const response = await fetch(
-    `${API_URL}/managemention-cars/?ownerId=${Number(id)}&${queryParams.toString()}`,
+    `${API_URL}/managemention-cars/?page=1&size=1000&ownerId=${Number(id)}&${queryParams.toString()}`,
     {
       headers: {
         'Content-Type': 'application/json',
