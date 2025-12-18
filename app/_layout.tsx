@@ -1,25 +1,54 @@
-import '@/global.css';
-
-import { NAV_THEME } from '@/lib/theme';
-import { ThemeProvider } from '@react-navigation/native';
 import { PortalHost } from '@rn-primitives/portal';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'nativewind';
+import { StatusBar } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+import '@/global.css';
+import '@/polyfills';
+import { useAuthStore } from '@/store/authStore';
+
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  const { colorScheme } = useColorScheme();
+  return (
+    <QueryClientProvider client={queryClient}>
+      <GestureHandlerRootView className="flex-1">
+        <StatusBar />
+        <Routes />
+        <PortalHost />
+      </GestureHandlerRootView>
+    </QueryClientProvider>
+  );
+}
+
+export const unstable_settings = {
+  initialRouteName: '(main)',
+};
+
+export function Routes() {
+  const { isAuthenticated } = useAuthStore();
+
+  // const isAuthenticated = true;
 
   return (
-    <ThemeProvider value={NAV_THEME[colorScheme ?? 'light']}>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-      <Stack />
-      <PortalHost />
-    </ThemeProvider>
+    <Stack>
+      <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Screen
+          name="(auth)"
+          options={{
+            headerShown: false,
+          }}
+        />
+      </Stack.Protected>
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen
+          name="(main)"
+          options={{
+            headerShown: false,
+          }}
+        />
+      </Stack.Protected>
+    </Stack>
   );
 }
