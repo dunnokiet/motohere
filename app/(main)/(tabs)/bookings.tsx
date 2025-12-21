@@ -10,7 +10,7 @@ import { ActivityIndicator, Alert, FlatList, View, Image, Pressable } from 'reac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
-type BookingStatus = 'PENDING' | 'COMPLETED' | 'CANCELLED';
+type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
 
 export default function BookingsScreen() {
   const { user } = useAuthStore();
@@ -66,7 +66,7 @@ export default function BookingsScreen() {
     switch (status) {
       case 'PENDING':
         return 'Chờ xác nhận';
-      case 'COMPLETED':
+      case 'CONFIRMED':
         return 'Đã xác nhận';
       case 'CANCELLED':
         return 'Đã hủy';
@@ -187,7 +187,7 @@ export default function BookingsScreen() {
       </View>
 
       <View className="mb-4 flex-row gap-2">
-        {(['PENDING', 'COMPLETED', 'CANCELLED'] as BookingStatus[]).map((status) => (
+        {(['PENDING', 'CONFIRMED', 'CANCELLED'] as BookingStatus[]).map((status) => (
           <Button
             key={status}
             className="flex-1 rounded-full"
@@ -196,7 +196,7 @@ export default function BookingsScreen() {
             <Text className="text-xs">
               {status === 'PENDING'
                 ? 'Chờ xác nhận'
-                : status === 'COMPLETED'
+                : status === 'CONFIRMED'
                   ? 'Đã xác nhận'
                   : 'Đã hủy'}
             </Text>
@@ -215,7 +215,6 @@ export default function BookingsScreen() {
           data={bookings}
           keyExtractor={(item) => String(item.bookingId)}
           renderItem={renderItem}
-          contentContainerClassName="pb-24"
         />
       )}
     </SafeAreaView>
