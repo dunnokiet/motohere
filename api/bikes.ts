@@ -100,7 +100,7 @@ export async function searchBikes(
   if (params.startTime) queryParams.append('startTime', params.startTime);
   if (params.endTime) queryParams.append('endTime', params.endTime);
   queryParams.append('page', (params.page || 1).toString());
-  queryParams.append('size', (params.size || 10).toString());
+  queryParams.append('size', (params.size || 1000).toString());
   if (params.latitude) queryParams.append('latitude', params.latitude.toString());
   if (params.longitude) queryParams.append('longitude', params.longitude.toString());
 
