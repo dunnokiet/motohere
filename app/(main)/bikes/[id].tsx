@@ -49,7 +49,12 @@ export default function BikeDetailScreen() {
   };
 
   const handleEditBike = () => {
-    Alert.alert('Thông báo', 'Chức năng sửa xe sẽ được cập nhật sau.');
+    if (!id) return;
+
+    router.push({
+      pathname: '/(main)/bikes/create',
+      params: { id: String(id), mode: 'edit' },
+    });
   };
 
   const handleDeleteBike = () => {

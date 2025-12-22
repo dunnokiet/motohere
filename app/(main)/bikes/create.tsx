@@ -1,4 +1,4 @@
-import { BikeDetail, createBike } from '@/api/bikes';
+import { BikeDetail, createBike, getBikeById, updatedBike, type BikeImage } from '@/api/bikes';
 import { BRANDS } from '@/components/brands-list';
 import { PROVINCES } from '@/components/search/provinces-list';
 import { BottomSheet, useBottomSheet } from '@/components/ui/bottom-sheet';
@@ -10,8 +10,8 @@ import { useAuthStore } from '@/store/authStore';
 import { IconChevronDown } from '@tabler/icons-react-native';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -28,8 +28,16 @@ type LocalImage = {
   type: string;
 };
 
+type Replacement = {
+  originalId: string;
+  file: LocalImage;
+};
+
 export default function CreateBikeScreen() {
   const { user } = useAuthStore();
+
+  const { id, mode } = useLocalSearchParams<{ id?: string; mode?: string }>();
+  const isEditMode = mode === 'edit' && !!id;
 
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
@@ -46,6 +54,9 @@ export default function CreateBikeScreen() {
   const [images, setImages] = useState<LocalImage[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const [originalImages, setOriginalImages] = useState<BikeImage[]>([]);
+  const [replacements, setReplacements] = useState<Replacement[]>([]);
 
   const {
     isVisible: isBrandSheetVisible,
@@ -123,7 +134,7 @@ export default function CreateBikeScreen() {
       newErrors.longitude = 'Vui lòng nhập kinh độ.';
     }
 
-    if (images.length === 0) newErrors.images = 'Vui lòng chọn ít nhất 1 ảnh xe.';
+    if (!isEditMode && images.length === 0) newErrors.images = 'Vui lòng chọn ít nhất 1 ảnh xe.';
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
@@ -148,6 +159,53 @@ export default function CreateBikeScreen() {
 
     if (Number.isNaN(lat) || Number.isNaN(lng)) {
       Alert.alert('Lỗi', 'Vui lòng nhập tọa độ hợp lệ, ví dụ: 10.6789');
+      return;
+    }
+
+    if (isEditMode && id) {
+      const publishIds = replacements.map((r) => r.originalId);
+
+      const files: File[] = replacements.map(
+        (r) =>
+          ({
+            uri: r.file.uri,
+            name: r.file.name,
+            type: r.file.type,
+          }) as unknown as File
+      );
+
+      const car = {
+        ownerId: Number(user.userId),
+        carId: Number(id),
+        brand: brand.trim(),
+        model: model.trim(),
+        licensePlate: licensePlate.trim(),
+        year: Number(year),
+        pricePerHour: Number(pricePerHour),
+        name: locationName,
+        province,
+        ward,
+        latitude: lat,
+        longitude: lng,
+        publishIds,
+      };
+
+      try {
+        setIsSubmitting(true);
+        await updatedBike(car as any, files, user?.accessToken || null);
+        Alert.alert('Thành công', 'Cập nhật xe thành công.', [
+          {
+            text: 'OK',
+            onPress: () => {
+              router.back();
+            },
+          },
+        ]);
+      } catch (error: any) {
+        Alert.alert('Lỗi', error?.message ?? 'Không thể cập nhật xe, vui lòng thử lại.');
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
 
@@ -178,7 +236,7 @@ export default function CreateBikeScreen() {
 
     try {
       setIsSubmitting(true);
-      await createBike(car, files, user.accessToken);
+      await createBike(car, files, user?.accessToken || null);
       Alert.alert('Thành công', 'Thêm xe thành công.', [
         {
           text: 'OK',
@@ -194,16 +252,88 @@ export default function CreateBikeScreen() {
     }
   };
 
+  useEffect(() => {
+    if (!isEditMode || !id) return;
+
+    const loadBike = async () => {
+      try {
+        const { bikeDetail } = await getBikeById(id as string, user?.accessToken || null);
+
+        setBrand(bikeDetail.brand);
+        setModel(bikeDetail.model);
+        setLicensePlate(bikeDetail.licensePlate);
+        setYear(String(bikeDetail.year));
+        setPricePerHour(String(bikeDetail.pricePerHour));
+
+        setLocationName(bikeDetail.location.name);
+        setProvince(bikeDetail.location.province);
+        setWard(bikeDetail.location.ward);
+        setLatitude(
+          bikeDetail.location.latitude !== undefined ? String(bikeDetail.location.latitude) : ''
+        );
+        setLongitude(
+          bikeDetail.location.longitude !== undefined ? String(bikeDetail.location.longitude) : ''
+        );
+
+        setOriginalImages(bikeDetail.images ?? []);
+        setReplacements([]);
+      } catch (e: any) {
+        Alert.alert('Lỗi', e?.message ?? 'Không thể tải thông tin xe, vui lòng thử lại.');
+        router.back();
+      }
+    };
+
+    loadBike();
+  }, [isEditMode, id, user?.accessToken]);
+
+  const handlePickReplacementImage = async (originalId: string) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Lỗi', 'Ứng dụng cần quyền truy cập thư viện ảnh.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const asset = result.assets[0];
+      const originalUri = asset.uri;
+
+      const manipulated = await ImageManipulator.manipulateAsync(originalUri, [], {
+        compress: 0.8,
+        format: ImageManipulator.SaveFormat.PNG,
+      });
+
+      const uri = manipulated.uri;
+      const name = `image_${Date.now()}.png`;
+      const type = 'image/png';
+
+      const file: LocalImage = { uri, name, type };
+
+      setReplacements((prev) => {
+        const others = prev.filter((r) => r.originalId !== originalId);
+        return [...others, { originalId, file }];
+      });
+    }
+  };
+
   return (
     <View className="flex-1 bg-background">
       <ScrollView
         className="flex-1 px-4 pt-24"
-        contentContainerClassName="pb-32 gap-6"
+        contentContainerClassName="pb-10 gap-6"
         showsVerticalScrollIndicator={false}>
         <View className="gap-2">
-          <Text className="text-2xl font-extrabold">Thêm xe cho thuê</Text>
+          <Text className="text-2xl font-extrabold">
+            {isEditMode ? 'Sửa xe' : 'Thêm xe cho thuê'}
+          </Text>
           <Text className="text-sm text-muted-foreground">
-            Nhập đầy đủ thông tin để khách dễ dàng tìm thấy xe của bạn.
+            {isEditMode
+              ? 'Cập nhật thông tin xe của bạn.'
+              : 'Nhập đầy đủ thông tin để khách dễ dàng tìm thấy xe của bạn.'}
           </Text>
         </View>
 
@@ -343,31 +473,64 @@ export default function CreateBikeScreen() {
                 Thêm ảnh rõ ràng, nhiều góc để tăng tỉ lệ được thuê.
               </Text>
             </View>
-            <Button
-              size="sm"
-              className="rounded-full px-4"
-              variant="outline"
-              onPress={handlePickImage}>
-              <Text>Chọn ảnh</Text>
-            </Button>
+
+            {!isEditMode && (
+              <Button
+                size="sm"
+                className="rounded-full px-4"
+                variant="outline"
+                onPress={handlePickImage}>
+                <Text>Chọn ảnh</Text>
+              </Button>
+            )}
           </View>
           {errors.images && <Text className="text-xs text-red-500">{errors.images}</Text>}
 
-          <View className="flex-row flex-wrap gap-4">
-            {images.map((img, index) => (
-              <View key={index} className="relative">
-                <Image
-                  source={{ uri: img.uri }}
-                  style={{ width: 96, height: 96, borderRadius: 16 }}
-                />
-                <Pressable
-                  onPress={() => handleRemoveImage(index)}
-                  className="absolute right-1 top-1 rounded-full bg-black/60 px-2 py-1">
-                  <Text className="text-xs text-white">Xóa</Text>
-                </Pressable>
-              </View>
-            ))}
-          </View>
+          {isEditMode ? (
+            <View className="flex-row flex-wrap gap-4">
+              {originalImages.map((img) => {
+                const replacement = replacements.find((r) => r.originalId === img.id);
+                const displayUri = replacement?.file.uri ?? img.url;
+
+                return (
+                  <View key={img.id} className="relative">
+                    <Image
+                      source={{ uri: displayUri }}
+                      style={{ width: 96, height: 96, borderRadius: 16 }}
+                    />
+                    <Pressable
+                      onPress={() => handlePickReplacementImage(img.id)}
+                      className="absolute bottom-1 left-1 rounded-full bg-black/60 px-2 py-1">
+                      <Text className="text-xs text-white">
+                        {replacement ? 'Đổi lại' : 'Thay ảnh'}
+                      </Text>
+                    </Pressable>
+                    {replacement && (
+                      <View className="absolute right-1 top-1 rounded-full bg-emerald-600 px-2 py-1">
+                        <Text className="text-[10px] text-white">Đã chọn mới</Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+          ) : (
+            <View className="flex-row flex-wrap gap-4">
+              {images.map((img, index) => (
+                <View key={index} className="relative">
+                  <Image
+                    source={{ uri: img.uri }}
+                    style={{ width: 96, height: 96, borderRadius: 16 }}
+                  />
+                  <Pressable
+                    onPress={() => handleRemoveImage(index)}
+                    className="absolute right-1 top-1 rounded-full bg-black/60 px-2 py-1">
+                    <Text className="text-xs text-white">Xóa</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         <Button

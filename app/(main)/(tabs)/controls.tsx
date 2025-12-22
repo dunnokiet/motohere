@@ -6,10 +6,11 @@ import { Text } from '@/components/ui/text';
 import { formatPrice } from '@/lib/formatters';
 import { useAuthStore } from '@/store/authStore';
 import { useSearchStore } from '@/store/searchStore';
-import { IconDots, IconPlus, IconTrash } from '@tabler/icons-react-native';
+import { IconDots, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react-native';
 import { router } from 'expo-router';
 import * as React from 'react';
 import { ActivityIndicator, Alert, FlatList, Image, Pressable, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ControlsScreen() {
   const [bikes, setBikes] = React.useState<Bike[]>([]);
@@ -19,44 +20,52 @@ export default function ControlsScreen() {
   const { user } = useAuthStore();
   const { brand, minPrice, maxPrice, year } = useSearchStore();
 
-  React.useEffect(() => {
-    let cancelled = false;
+  useFocusEffect(
+    React.useCallback(() => {
+      let cancelled = false;
 
-    if (!user) return;
-
-    const fetchBikes = async () => {
-      try {
-        setLoading(true);
-        const { bikes } = await getListBikesOwner(
-          {
-            brand: brand || undefined,
-            minPrice: minPrice ?? undefined,
-            maxPrice: maxPrice ?? undefined,
-            year: year ?? undefined,
-          },
-          user.userId,
-          user.accessToken
-        );
-
-        if (!cancelled) {
-          setBikes(bikes);
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setError(e?.message ?? 'Có lỗi xảy ra');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+      if (!user) {
+        setBikes([]);
+        setError(null);
+        return;
       }
-    };
 
-    fetchBikes();
-    return () => {
-      cancelled = true;
-    };
-  }, [user, brand, minPrice, maxPrice, year]);
+      const fetchBikes = async () => {
+        try {
+          setLoading(true);
+          const { bikes } = await getListBikesOwner(
+            {
+              brand: brand || undefined,
+              minPrice: minPrice ?? undefined,
+              maxPrice: maxPrice ?? undefined,
+              year: year ?? undefined,
+            },
+            String(user.userId),
+            user.accessToken
+          );
+
+          if (!cancelled) {
+            setBikes(bikes);
+            setError(null);
+          }
+        } catch (e: any) {
+          if (!cancelled) {
+            setError(e?.message ?? 'Có lỗi xảy ra');
+          }
+        } finally {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        }
+      };
+
+      fetchBikes();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [user, brand, minPrice, maxPrice, year])
+  );
 
   const handleDelete = (bike: Bike) => {
     if (!bike.id || !user) return;
@@ -159,7 +168,20 @@ export default function ControlsScreen() {
                       {item.brand} {item.model}
                     </Text>
                     <View className="flex-row items-center gap-2">
-                      <Text className="text-sm text-muted-foreground">{item.year}</Text>
+                      <Button
+                        size="icon"
+                        className="rounded-full"
+                        variant="ghost"
+                        onPress={() => {
+                          if (!item.id) return;
+                          router.push({
+                            pathname: '/(main)/bikes/create',
+                            params: { id: String(item.id), mode: 'edit' },
+                          });
+                        }}>
+                        <Icon as={IconPencil} className="size-7 text-primary" />
+                      </Button>
+
                       <Button
                         size="icon"
                         className="rounded-full"
@@ -170,6 +192,7 @@ export default function ControlsScreen() {
                       </Button>
                     </View>
                   </View>
+                  <Text className="text-sm text-muted-foreground">{item.year}</Text>
 
                   <View className="mt-1 flex-row items-baseline gap-1">
                     <Text className="text-lg font-semibold text-emerald-500">
