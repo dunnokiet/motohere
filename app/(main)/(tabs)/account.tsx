@@ -1,4 +1,5 @@
 import { getInformationAccount, updateInformationAccount, type Account } from '@/api/account';
+import { changePassword } from '@/api/auth';
 import {
   cancelBooking,
   confirmBooking,
@@ -11,9 +12,17 @@ import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { formatDateTime, formatRange, getDefaultTimeRange, parseDateTime } from '@/lib/formatters';
 import { useAuthStore } from '@/store/authStore';
-import { useQuery, useQueryClient } from '@tanstack/react-query'; // <-- thêm useQueryClient
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, View, FlatList, Image } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type AccountTab = 'info' | 'request';
@@ -22,7 +31,7 @@ type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
 export default function Account() {
   const [activeTab, setActiveTab] = useState<AccountTab>('info');
   const { user } = useAuthStore();
-  const queryClient = useQueryClient(); // <-- khởi tạo
+  const queryClient = useQueryClient();
 
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -40,6 +49,12 @@ export default function Account() {
   const [statusFilter, setStatusFilter] = useState<BookingStatus>('PENDING');
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [processingAction, setProcessingAction] = useState<'confirm' | 'cancel' | null>(null);
+
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [isSubmittingPassword, setIsSubmittingPassword] = useState(false);
 
   if (!user) {
     return (
@@ -101,6 +116,34 @@ export default function Account() {
       Alert.alert('Lỗi', e?.message ?? 'Không thể cập nhật thông tin, vui lòng thử lại.');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!user || !account) return;
+
+    if (!oldPassword || !newPassword || !confirmNewPassword) {
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ mật khẩu cũ và mật khẩu mới.');
+      return;
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      Alert.alert('Lỗi', 'Mật khẩu mới và xác nhận mật khẩu không khớp.');
+      return;
+    }
+
+    try {
+      setIsSubmittingPassword(true);
+      await changePassword(account.username, oldPassword, newPassword, user.accessToken);
+      Alert.alert('Thành công', 'Đổi mật khẩu thành công.');
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setIsChangingPassword(false);
+    } catch (e: any) {
+      Alert.alert('Lỗi', e?.message ?? 'Không thể đổi mật khẩu, vui lòng thử lại.');
+    } finally {
+      setIsSubmittingPassword(false);
     }
   };
 
@@ -183,6 +226,15 @@ export default function Account() {
         <Button className="rounded-full" disabled={isUpdating} onPress={handleUpdate}>
           <Text>{isUpdating ? 'Đang cập nhật...' : 'Cập nhật'}</Text>
         </Button>
+
+        <View className="mt-4 gap-3">
+          <Button
+            className="rounded-full"
+            variant="outline"
+            onPress={() => setIsChangingPassword(true)}>
+            <Text>Đổi mật khẩu</Text>
+          </Button>
+        </View>
       </View>
     );
   };
@@ -426,8 +478,79 @@ export default function Account() {
     );
   };
 
+  const renderChangePasswordModal = () => (
+    <Modal
+      visible={isChangingPassword}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setIsChangingPassword(false)}>
+      <KeyboardAvoidingView style={{ flex: 1 }}>
+        <View className="flex-1 items-center justify-center bg-black/50">
+          <View className="w-11/12 rounded-3xl bg-background p-4">
+            <Text className="mb-4 text-lg font-semibold">Đổi mật khẩu</Text>
+
+            <View className="mb-3 gap-1">
+              <Text className="text-sm text-muted-foreground">Mật khẩu hiện tại</Text>
+              <Input
+                className="rounded-full"
+                secureTextEntry
+                value={oldPassword}
+                onChangeText={setOldPassword}
+                placeholder="Nhập mật khẩu hiện tại"
+              />
+            </View>
+
+            <View className="mb-3 gap-1">
+              <Text className="text-sm text-muted-foreground">Mật khẩu mới</Text>
+              <Input
+                className="rounded-full"
+                secureTextEntry
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Nhập mật khẩu mới"
+              />
+            </View>
+
+            <View className="mb-4 gap-1">
+              <Text className="text-sm text-muted-foreground">Xác nhận mật khẩu mới</Text>
+              <Input
+                className="rounded-full"
+                secureTextEntry
+                value={confirmNewPassword}
+                onChangeText={setConfirmNewPassword}
+                placeholder="Nhập lại mật khẩu mới"
+              />
+            </View>
+
+            <View className="flex-row gap-2">
+              <Button
+                className="flex-1 rounded-full"
+                variant="outline"
+                disabled={isSubmittingPassword}
+                onPress={() => {
+                  setIsChangingPassword(false);
+                  setOldPassword('');
+                  setNewPassword('');
+                  setConfirmNewPassword('');
+                }}>
+                <Text>Hủy</Text>
+              </Button>
+              <Button
+                className="flex-1 rounded-full"
+                disabled={isSubmittingPassword}
+                onPress={handleChangePassword}>
+                <Text>{isSubmittingPassword ? 'Đang gửi...' : 'Xác nhận'}</Text>
+              </Button>
+            </View>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-background p-4 pt-20">
+      {renderChangePasswordModal()}
       <View className="mb-4 flex-row gap-2">
         <Button
           className="flex-1 rounded-full"
