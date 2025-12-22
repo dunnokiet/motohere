@@ -140,9 +140,45 @@ export default function BikeDetailScreen() {
           </View>
           <View className="gap-4">
             <Text className="text-xl font-semibold text-foreground">Đánh giá</Text>
-            <View className="p-6k rounded-3xl bg-secondary">
-              <Text className="text-center">Chưa có đánh giá nào</Text>
-            </View>
+
+            {!bike?.reviews || bike.reviews.length === 0 ? (
+              <View className="rounded-3xl bg-secondary p-6">
+                <Text className="text-center">Chưa có đánh giá nào</Text>
+              </View>
+            ) : (
+              <View className="gap-3 rounded-3xl bg-secondary p-4">
+                {bike.reviews.map((review) => {
+                  const createdAt = (review as any).createdAt || (review as any).createAt || null;
+                  const createdAtText = createdAt
+                    ? new Date(createdAt).toLocaleDateString('vi-VN')
+                    : null;
+
+                  return (
+                    <View key={review.id} className="gap-1 rounded-2xl bg-background/80 p-3">
+                      <View className="mb-1 flex-row items-center justify-between">
+                        <View className="flex-row">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Text
+                              key={star}
+                              className={
+                                star <= review.rating
+                                  ? 'text-base text-yellow-400'
+                                  : 'text-base text-muted-foreground'
+                              }>
+                              ★
+                            </Text>
+                          ))}
+                        </View>
+                        {createdAtText && (
+                          <Text className="text-xs text-muted-foreground">{createdAtText}</Text>
+                        )}
+                      </View>
+                      <Text className="text-sm">{review.comment}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
           </View>
         </View>
       </ScrollView>

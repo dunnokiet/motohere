@@ -1,5 +1,6 @@
 import { getDefaultTimeRange } from '@/lib/formatters';
 import { generateAPIUrl } from '@/lib/generators';
+import { Review } from './bookings';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL!;
 
@@ -32,8 +33,6 @@ export interface Bike {
   longitude?: number;
   latitude?: number;
 }
-
-export interface Review {}
 
 export interface BikeDetail {
   ownerId: number;
