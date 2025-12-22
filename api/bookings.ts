@@ -18,6 +18,8 @@ export interface Booking {
 export interface Review {
   id: number;
   bookingId: number;
+  customerId: number;
+  customerName: string;
   rating: number;
   comment: string;
   createAt: string;

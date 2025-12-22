@@ -53,7 +53,7 @@ export const deleteReview = async (
   if (!accessToken) throw new Error('No access token');
 
   const response = await fetch(`${API_URL}/review-booking/delete/${bookingId}/${reviewId}`, {
-    method: 'PATCH',
+    method: 'DELETE',
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
