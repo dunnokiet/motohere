@@ -1,24 +1,24 @@
-import { cancelBooking, getListsBookings, type Booking } from '@/api/bookings';
+import { cancelBooking, getDetailBookings, getListsBookings, type Booking } from '@/api/bookings';
 import { createReview } from '@/api/review';
 import { DatePicker } from '@/components/search/date-picker';
 import { Button } from '@/components/ui/button';
-import { Text } from '@/components/ui/text';
 import { Input } from '@/components/ui/input';
+import { Text } from '@/components/ui/text';
 import { formatDateTime, formatRange, getDefaultTimeRange, parseDateTime } from '@/lib/formatters';
 import { useAuthStore } from '@/store/authStore';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
   Image,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   View,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -51,6 +51,49 @@ export default function BookingsScreen() {
       ),
     enabled: !!user && !!startTime && !!endTime,
   });
+
+  useEffect(() => {
+    if (!user || !data?.bookings) {
+      setReviewedBookingIds([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchReviewed = async () => {
+      const ids: number[] = [];
+
+      await Promise.all(
+        data.bookings.map(async (b) => {
+          if (!b.bookingId) return;
+          try {
+            const { bookingDetail } = await getDetailBookings(
+              String(b.bookingId),
+              user.accessToken
+            );
+
+            const hasReview = Array.isArray(bookingDetail.review)
+              ? bookingDetail.review.length > 0
+              : !!bookingDetail.review;
+
+            if (hasReview) {
+              ids.push(Number(b.bookingId));
+            }
+          } catch {}
+        })
+      );
+
+      if (!cancelled) {
+        setReviewedBookingIds(ids);
+      }
+    };
+
+    fetchReviewed();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, data?.bookings]);
 
   const bookings = (data?.bookings || []).filter((b) => b.status === statusFilter);
 
