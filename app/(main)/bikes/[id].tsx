@@ -56,6 +56,8 @@ export default function BikeDetailScreen() {
 
   const bottom = useBottomTabOverflow();
 
+  const isOwner = !!(bike && user && bike.ownerId === Number(user.userId));
+
   const handleBookPress = () => {
     if (!bike) return;
 
@@ -410,7 +412,11 @@ export default function BikeDetailScreen() {
             </Button>
           </>
         ) : (
-          <Button className="flex-1 rounded-full" variant="secondary" onPress={handleBookPress}>
+          <Button
+            className="flex-1 rounded-full"
+            variant="secondary"
+            onPress={handleBookPress}
+            disabled={isOwner}>
             <Text>Đặt xe</Text>
           </Button>
         )}
