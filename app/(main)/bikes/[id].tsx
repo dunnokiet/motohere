@@ -29,7 +29,7 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function BikeDetailScreen() {
@@ -201,7 +201,28 @@ export default function BikeDetailScreen() {
             <View
               className="relative h-40 overflow-hidden rounded-3xl border border-border shadow-sm shadow-black/5"
               pointerEvents="none">
-              <MapView style={{ width: '100%', height: '100%' }} />
+              {bike?.location?.latitude && bike.location.longitude ? (
+                <MapView
+                  style={{ width: '100%', height: '100%' }}
+                  initialRegion={{
+                    latitude: bike.location.latitude,
+                    longitude: bike.location.longitude,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  }}>
+                  <Marker
+                    coordinate={{
+                      latitude: bike.location.latitude,
+                      longitude: bike.location.longitude,
+                    }}
+                    title={`${bike.brand} ${bike.model}`}
+                    description={bike.location.name}
+                  />
+                </MapView>
+              ) : (
+                <MapView style={{ width: '100%', height: '100%' }} />
+              )}
+
               <Badge className="insert-x-0 absolute m-4 rounded-full" variant="secondary">
                 <Icon as={IconMapPin} className="size-4" />
                 <Text className="text-xs">{bike?.location.name}</Text>
