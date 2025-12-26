@@ -218,16 +218,22 @@ export default function BikeDetailScreen() {
                       longitude: bike.location.longitude,
                     }}
                     title={`${bike.brand} ${bike.model}`}
-                    description={bike.location.name}
+                    description={`${bike.location.name}, ${bike.location.ward}, ${bike.location.province}`}
                   />
                 </MapView>
               ) : (
                 <MapView style={{ width: '100%', height: '100%' }} />
               )}
 
-              <Badge className="insert-x-0 absolute m-4 rounded-full" variant="secondary">
+              <Badge
+                className="insert-x-0 absolute mx-4 mt-1 rounded-full px-4"
+                variant="secondary">
                 <Icon as={IconMapPin} className="size-4" />
-                <Text className="text-xs">{bike?.location.name}</Text>
+                <Text className="text-xs">
+                  {bike
+                    ? `${bike.location.name}, ${bike.location.ward}, ${bike.location.province}`
+                    : ''}
+                </Text>
               </Badge>
             </View>
           </View>
