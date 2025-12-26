@@ -52,3 +52,53 @@ export const logout = async (freshToken: string): Promise<void> => {
     throw new Error(result.message[0]);
   }
 };
+
+export const changePassword = async (
+  username: string,
+  oldPassword: string,
+  newPassword: string,
+  accessToken: string | null
+) => {
+  if (!accessToken) throw new Error('No access token');
+
+  const response = await fetch(`${API_URL}/auth/change-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ username, oldPassword, newPassword }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || result.status !== 200) {
+    throw new Error(result.message[0]);
+  }
+};
+
+export const forgotPassword = async (email: string) => {
+  await fetch(`${API_URL}/auth/forgot-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+};
+
+export const resetPassword = async (email: string, otp: number, newPassword: string) => {
+  const response = await fetch(`${API_URL}/auth/reset-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, otp, newPassword }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || result.status !== 200) {
+    throw new Error(result.message[0]);
+  }
+};

@@ -1,61 +1,94 @@
-import { getListBikesOwner, type Bike } from '@/api/bikes';
+import { deleteBike, getListBikesOwner, type Bike } from '@/api/bikes';
+import { FilterBar } from '@/components/search/filter-bar';
+import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { formatPrice } from '@/lib/formatters';
 import { useAuthStore } from '@/store/authStore';
-import * as React from 'react';
-import { ActivityIndicator, FlatList, Image, View, Pressable } from 'react-native';
-import { router } from 'expo-router';
-import { FilterBar } from '@/components/search/filter-bar';
 import { useSearchStore } from '@/store/searchStore';
-import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
-import { IconDots } from '@tabler/icons-react-native';
+import { IconDots, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react-native';
+import { router } from 'expo-router';
+import * as React from 'react';
+import { ActivityIndicator, Alert, FlatList, Image, Pressable, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ControlsScreen() {
   const [bikes, setBikes] = React.useState<Bike[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const { user } = useAuthStore();
   const { brand, minPrice, maxPrice, year } = useSearchStore();
 
-  React.useEffect(() => {
-    let cancelled = false;
+  useFocusEffect(
+    React.useCallback(() => {
+      let cancelled = false;
 
-    if (!user) return;
-
-    const fetchBikes = async () => {
-      try {
-        setLoading(true);
-        const { bikes } = await getListBikesOwner(
-          {
-            brand: brand || undefined,
-            minPrice: minPrice ?? undefined,
-            maxPrice: maxPrice ?? undefined,
-            year: year ?? undefined,
-          },
-          user.userId,
-          user.accessToken
-        );
-
-        if (!cancelled) {
-          setBikes(bikes);
-        }
-      } catch (e: any) {
-        if (!cancelled) {
-          setError(e?.message ?? 'Có lỗi xảy ra');
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+      if (!user) {
+        setBikes([]);
+        setError(null);
+        return;
       }
-    };
 
-    fetchBikes();
-    return () => {
-      cancelled = true;
-    };
-  }, [user, brand, minPrice, maxPrice, year]);
+      const fetchBikes = async () => {
+        try {
+          setLoading(true);
+          const { bikes } = await getListBikesOwner(
+            {
+              brand: brand || undefined,
+              minPrice: minPrice ?? undefined,
+              maxPrice: maxPrice ?? undefined,
+              year: year ?? undefined,
+            },
+            String(user.userId),
+            user.accessToken
+          );
+
+          if (!cancelled) {
+            setBikes(bikes);
+            setError(null);
+          }
+        } catch (e: any) {
+          if (!cancelled) {
+            setError(e?.message ?? 'Có lỗi xảy ra');
+          }
+        } finally {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        }
+      };
+
+      fetchBikes();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [user, brand, minPrice, maxPrice, year])
+  );
+
+  const handleDelete = (bike: Bike) => {
+    if (!bike.id || !user) return;
+
+    Alert.alert('Xóa xe', 'Bạn có chắc chắn muốn xóa xe này?', [
+      { text: 'Hủy', style: 'cancel' },
+      {
+        text: 'Xóa',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            setDeletingId(String(bike.id));
+            await deleteBike(String(bike.id), String(user.userId), user.accessToken);
+            setBikes((prev) => prev.filter((b) => b.id !== bike.id));
+          } catch (e: any) {
+            Alert.alert('Lỗi', e?.message ?? 'Không thể xóa xe, vui lòng thử lại.');
+          } finally {
+            setDeletingId(null);
+          }
+        },
+      },
+    ]);
+  };
 
   if (loading) {
     return (
@@ -76,13 +109,14 @@ export default function ControlsScreen() {
   return (
     <View className="flex-1 bg-background px-4 pb-4 pt-24">
       <View className="mb-4 flex-row items-center justify-between">
-        <Pressable
-          className="rounded-full bg-primary px-4 py-2"
+        <Button
+          size="icon"
+          className="rounded-full"
           onPress={() => {
             router.push('/(main)/bikes/create');
           }}>
-          <Text className="font-semibold text-primary-foreground">Thêm xe</Text>
-        </Pressable>
+          <Icon as={IconPlus} className="size-5 text-primary-foreground" />
+        </Button>
 
         <Button
           size="icon"
@@ -133,8 +167,32 @@ export default function ControlsScreen() {
                     <Text className="text-lg font-semibold">
                       {item.brand} {item.model}
                     </Text>
-                    <Text className="text-sm text-muted-foreground">{item.year}</Text>
+                    <View className="flex-row items-center gap-2">
+                      <Button
+                        size="icon"
+                        className="rounded-full"
+                        variant="ghost"
+                        onPress={() => {
+                          if (!item.id) return;
+                          router.push({
+                            pathname: '/(main)/bikes/create',
+                            params: { id: String(item.id), mode: 'edit' },
+                          });
+                        }}>
+                        <Icon as={IconPencil} className="size-7 text-primary" />
+                      </Button>
+
+                      <Button
+                        size="icon"
+                        className="rounded-full"
+                        variant="ghost"
+                        disabled={deletingId === String(item.id)}
+                        onPress={() => handleDelete(item)}>
+                        <Icon as={IconTrash} className="size-7 text-destructive" />
+                      </Button>
+                    </View>
                   </View>
+                  <Text className="text-sm text-muted-foreground">{item.year}</Text>
 
                   <View className="mt-1 flex-row items-baseline gap-1">
                     <Text className="text-lg font-semibold text-emerald-500">

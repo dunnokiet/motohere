@@ -6,6 +6,8 @@ export interface Booking {
   bookingId?: string;
   carId?: number;
   customerId?: number;
+  customerName?: string;
+  customerPhone?: string;
   car?: Bike;
   startTime: string;
   endTime: string;
@@ -16,6 +18,8 @@ export interface Booking {
 export interface Review {
   id: number;
   bookingId: number;
+  customerId: number;
+  customerName: string;
   rating: number;
   comment: string;
   createAt: string;
@@ -152,4 +156,38 @@ export async function getDetailBookings(id: string, accessToken: string | null) 
   };
 
   return { bookingDetail };
+}
+
+export async function getListsBookingsByOwner(
+  params: BookingParams,
+  accessToken: string | null
+): Promise<{ bookings: Booking[] }> {
+  if (!accessToken) throw new Error('No access token');
+
+  const queryParams = new URLSearchParams();
+
+  if (params.startTime) queryParams.append('startTime', params.startTime);
+  if (params.endTime) queryParams.append('endTime', params.endTime);
+
+  const response = await fetch(`${API_URL}/rention/owner/bookings?${queryParams.toString()}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  const result = await response.json();
+  if (!response.ok || result.status !== 200) {
+    throw new Error(result.message[0]);
+  }
+
+  const bookings: Booking[] = result.data.map((booking: any) => ({
+    ...booking,
+    car: {
+      ...booking.car,
+      images: parseImages(booking.car.images),
+    },
+  }));
+
+  return { bookings };
 }
