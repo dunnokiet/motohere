@@ -40,7 +40,7 @@ export default function BookingsScreen() {
   const [endTime, setEndTime] = useState<Date | null>(parseDateTime(defaultRange.endTime));
 
   const { data, isPending, error, refetch } = useQuery({
-    queryKey: ['bookings', startTime?.toISOString(), endTime?.toISOString()],
+    queryKey: ['bookings', user?.userId, startTime?.toISOString(), endTime?.toISOString()],
     queryFn: () =>
       getListsBookings(
         {
@@ -72,9 +72,17 @@ export default function BookingsScreen() {
               user.accessToken
             );
 
-            const hasReview = Array.isArray(bookingDetail.review)
-              ? bookingDetail.review.length > 0
-              : !!bookingDetail.review;
+            const reviewsArray = Array.isArray(bookingDetail.review)
+              ? bookingDetail.review
+              : bookingDetail.review
+                ? [bookingDetail.review as any]
+                : [];
+
+            const hasReview = reviewsArray.some((r: any) => {
+              const rating = typeof r.rating === 'number' ? r.rating : Number(r.rating ?? 0);
+              const comment = (r.comment ?? r.reviewText ?? '').trim();
+              return rating > 0 && comment.length > 0;
+            });
 
             if (hasReview) {
               ids.push(Number(b.bookingId));
