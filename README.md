@@ -1,11 +1,12 @@
-# Minimal Template
+# Motohere
 
-This is a [React Native](https://reactnative.dev/) project built with [Expo](https://expo.dev/) and [React Native Reusables](https://reactnativereusables.com).
+MotoHere is a mobile application built with [React Native](https://reactnative.dev/), [Expo](https://expo.dev/), [AI SDK](https://ai-sdk.dev/) and [React Native Reusables](https://reactnativereusables.com) that allows users to find and book motorcycle ride-hailing services.
 
-It was initialized using the following command:
+Clone the repository using the following command:
 
 ```bash
-npx @react-native-reusables/cli@latest init -t motohere
+git clone https://github.com/dunnokiet/motohere.git
+cd motohere
 ```
 
 ## Getting Started
@@ -30,23 +31,27 @@ This will start the Expo Dev Server. Open the app in:
 
 You can also scan the QR code using the [Expo Go](https://expo.dev/go) app on your device. This project fully supports running in Expo Go for quick testing on physical devices.
 
-## Adding components
+## Environment configuration
 
-You can add more reusable components using the CLI:
+Create a `.env.local` file in the root directory with the following content:
 
-```bash
-npx react-native-reusables/cli@latest add [...components]
+```env
+EXPO_PUBLIC_API_URL=http://your-backend-url/api/v1
+OPENAI_API_KEY=your-openai-api-key
 ```
 
-> e.g. `npx react-native-reusables/cli@latest add input textarea`
+Note:
 
-If you don't specify any component names, you'll be prompted to select which components to add interactively. Use the `--all` flag to install all available components at once.
+- Replace `your-backend-url` with your backend API address
+- Backend repository: [doi_application](https://github.com/duyp6090/doi_appication)
+- Ensure the backend is running before starting the app
 
 ## Project Features
 
 - ⚛️ Built with [Expo Router](https://expo.dev/router)
 - 🎨 Styled with [Tailwind CSS](https://tailwindcss.com/) via [Nativewind](https://www.nativewind.dev/)
 - 📦 UI powered by [React Native Reusables](https://github.com/founded-labs/react-native-reusables)
+- 🤖 AI powered by [AI SDK](https://ai-sdk.dev/)
 - 🚀 New Architecture enabled
 - 🔥 Edge to Edge enabled
 - 📱 Runs on iOS, Android, and Web
@@ -59,6 +64,7 @@ To dive deeper into the technologies used:
 - [Expo Docs](https://docs.expo.dev/)
 - [Nativewind Docs](https://www.nativewind.dev/)
 - [React Native Reusables](https://reactnativereusables.com)
+- [AI SDK](https://ai-sdk.dev/)
 
 ## Deploy with EAS
 
@@ -70,4 +76,4 @@ The easiest way to deploy your app is with [Expo Application Services (EAS)](htt
 
 ---
 
-If you enjoy using React Native Reusables, please consider giving it a ⭐ on [GitHub](https://github.com/founded-labs/react-native-reusables). Your support means a lot!
+If you find this project helpful, please give us a star on [GitHub](https://github.com/dunnokiet/motohere)!
