@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/store/authStore';
 import { IconLoader2 } from '@tabler/icons-react-native';
+import { router } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Alert, TextInput, View } from 'react-native';
 import { Button } from './ui/button';
@@ -41,6 +42,15 @@ export function SignUpForm() {
 
     try {
       await signUp(username, password);
+
+      Alert.alert('Thành công', 'Đăng ký thành công. Vui lòng đăng nhập lại.', [
+        {
+          text: 'Đồng ý',
+          onPress: () => {
+            router.replace('/(auth)/credentials/sign-in');
+          },
+        },
+      ]);
     } catch (error: any) {
       Alert.alert('Lỗi', error.message);
     }
