@@ -50,8 +50,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     const { user } = get();
 
-    console.log(user?.refreshToken);
-
     if (!user?.refreshToken) {
       set({ user: null, isAuthenticated: false, isLoading: false });
       return;
