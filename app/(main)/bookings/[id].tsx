@@ -13,7 +13,7 @@ function renderStatusLabel(status?: string) {
   switch (status) {
     case 'PENDING':
       return 'Chờ xác nhận';
-    case 'COMPLETED':
+    case 'CONFIRMED':
       return 'Đã xác nhận';
     case 'CANCELLED':
       return 'Đã hủy';

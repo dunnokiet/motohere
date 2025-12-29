@@ -21,7 +21,7 @@ export const createReview = async (review: Review, accessToken: string | null) =
 
   const result = await response.json();
 
-  if (!response.ok || result.status !== 200) {
+  if (!response.ok) {
     throw new Error(result.message[0]);
   }
 };
@@ -40,7 +40,7 @@ export const updateReview = async (review: Review, accessToken: string | null) =
 
   const result = await response.json();
 
-  if (!response.ok || result.status !== 200) {
+  if (!response.ok) {
     throw new Error(result.message[0]);
   }
 };
@@ -53,7 +53,7 @@ export const deleteReview = async (
   if (!accessToken) throw new Error('No access token');
 
   const response = await fetch(`${API_URL}/review-booking/delete/${bookingId}/${reviewId}`, {
-    method: 'PATCH',
+    method: 'DELETE',
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -61,7 +61,7 @@ export const deleteReview = async (
 
   const result = await response.json();
 
-  if (!response.ok || result.status !== 200) {
+  if (!response.ok) {
     throw new Error(result.message[0]);
   }
 };

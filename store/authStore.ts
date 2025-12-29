@@ -35,11 +35,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signUp: async (username, password) => {
     set({ isLoading: true });
     try {
-      const { user } = await AuthAPI.register(username, password);
+      await AuthAPI.register(username, password);
 
       set({
-        user,
-        isAuthenticated: true,
         isLoading: false,
       });
     } catch (error: any) {

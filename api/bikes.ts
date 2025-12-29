@@ -1,5 +1,6 @@
 import { getDefaultTimeRange } from '@/lib/formatters';
 import { generateAPIUrl } from '@/lib/generators';
+import { Review } from './bookings';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL!;
 
@@ -31,9 +32,8 @@ export interface Bike {
   ward?: string;
   longitude?: number;
   latitude?: number;
+  publishIds?: string;
 }
-
-export interface Review {}
 
 export interface BikeDetail {
   ownerId: number;
@@ -100,7 +100,7 @@ export async function searchBikes(
   if (params.startTime) queryParams.append('startTime', params.startTime);
   if (params.endTime) queryParams.append('endTime', params.endTime);
   queryParams.append('page', (params.page || 1).toString());
-  queryParams.append('size', (params.size || 10).toString());
+  queryParams.append('size', (params.size || 1000).toString());
   if (params.latitude) queryParams.append('latitude', params.latitude.toString());
   if (params.longitude) queryParams.append('longitude', params.longitude.toString());
 
@@ -286,3 +286,32 @@ export async function getListBikesOwner(
     bikes,
   };
 }
+
+export const updatedBike = async (car: Bike, images: any[], accessToken: string | null) => {
+  if (!accessToken) throw new Error('No access token');
+
+  const formData = new FormData();
+
+  formData.append('car', JSON.stringify(car));
+
+  images.forEach((img) => {
+    formData.append('images', {
+      uri: img.uri,
+      name: img.name,
+      type: img.type,
+    } as any);
+  });
+
+  const response = await fetch(generateAPIUrl('/api/bikes/updated'), {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: formData,
+  });
+
+  const result = await response.json();
+  if (!response.ok || result.status !== 200) {
+    throw new Error(result.message?.[0] || 'Updated failed');
+  }
+};
